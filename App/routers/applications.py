@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from App.application_statuses import APPLIED
-from App.core.deps import get_current_user
+from App.core.dependencies import get_current_user
 from App.crud.jobs import get_job  # Kaila's job lookup
 from App.crud.resumes import get_resume  # Kaila's resume lookup (only finds the user's own resumes)
 from App.database.connection import get_db
