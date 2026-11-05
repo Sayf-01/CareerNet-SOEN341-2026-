@@ -1,98 +1,64 @@
 
+import { apiFetch } from "./client";
 import type { Resume } from "../types/resume";
 import { validateResumeFile } from "../constants/resumeRules";
 
-// Temporary in-memory storage.
-// Each entry contains resume information and the actual file.
-interface StoredResume {
-  details: Resume;
-  file: File;
-}
-
-const mockResumes = new Map<number, StoredResume>();
-
-let nextResumeId = 1;
-
-// Get all uploaded resumes.
+// Get resumes belonging to the logged-in user.
 export async function getResumes(): Promise<Resume[]> {
-  return Array.from(mockResumes.values()).map((resume) => ({
-    ...resume.details,
-  }));
+  return apiFetch<Resume[]>("/resumes");
 }
 
-// Upload a new resume.
-export async function uploadResume(file: File): Promise<Resume> {
+// Upload a new resume to the backend.
+export async function uploadResume(
+  file: File
+): Promise<Resume> {
   const error = validateResumeFile(file);
 
   if (error) {
     throw new Error(error);
   }
 
-  const newResume: Resume = {
-    id: nextResumeId++,
-    filename: file.name,
-    content_type: file.type,
-    size_bytes: file.size,
-    uploaded_at: new Date().toISOString(),
-  };
+  const formData = new FormData();
+  formData.append("file", file);
 
-  mockResumes.set(newResume.id, {
-    details: newResume,
-    file,
+  return apiFetch<Resume>("/resumes", {
+    method: "POST",
+    body: formData,
   });
-
-  return { ...newResume };
 }
 
-// Replace an existing resume with a new file.
+// Replace an existing resume.
 export async function replaceResume(
   id: number,
   file: File
 ): Promise<Resume> {
-  const existingResume = mockResumes.get(id);
-
-  if (!existingResume) {
-    throw new Error("Resume not found.");
-  }
-
   const error = validateResumeFile(file);
 
   if (error) {
     throw new Error(error);
   }
 
-  const updatedResume: Resume = {
-    id,
-    filename: file.name,
-    content_type: file.type,
-    size_bytes: file.size,
-    uploaded_at: new Date().toISOString(),
-  };
+  const formData = new FormData();
+  formData.append("file", file);
 
-  mockResumes.set(id, {
-    details: updatedResume,
-    file,
+  return apiFetch<Resume>(`/resumes/${id}`, {
+    method: "PUT",
+    body: formData,
   });
-
-  return { ...updatedResume };
 }
 
-// Delete a resume.
-export async function deleteResume(id: number): Promise<void> {
-  if (!mockResumes.has(id)) {
-    throw new Error("Resume not found.");
-  }
-
-  mockResumes.delete(id);
+// Delete a resume from PostgreSQL.
+export async function deleteResume(
+  id: number
+): Promise<void> {
+  await apiFetch<void>(`/resumes/${id}`, {
+    method: "DELETE",
+  });
 }
 
-// Get the actual resume file for downloading.
-export async function downloadResume(id: number): Promise<Blob> {
-  const storedResume = mockResumes.get(id);
-
-  if (!storedResume) {
-    throw new Error("Resume not found.");
-  }
-
-  return storedResume.file;
+// Download an uploaded resume.
+export async function downloadResume(
+  id: number
+): Promise<Blob> {
+  return apiFetch<Blob>(`/resumes/${id}/download`);
 }

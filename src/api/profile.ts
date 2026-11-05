@@ -1,30 +1,32 @@
 
+import { apiFetch, ApiError } from "./client";
 import type { Profile } from "../types/profile";
 
-// Temporary storage until the real backend is ready.
-let mockProfile: Profile | null = null;
-
-// Get the current user's profile.
+/**
+ * Get the logged-in user's profile from PostgreSQL.
+ * Return null if the user hasn't created a profile.
+ */
 export async function getProfile(): Promise<Profile | null> {
-  if (!mockProfile) {
-    return null;
-  }
+  try {
+    return await apiFetch<Profile>("/profile/me");
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return null;
+    }
 
-  return {
-    ...mockProfile,
-    skills: [...mockProfile.skills],
-  };
+    throw error;
+  }
 }
 
-// Create or update the current user's profile.
-export async function saveProfile(data: Profile): Promise<Profile> {
-  mockProfile = {
-    ...data,
-    skills: [...data.skills],
-  };
-
-  return {
-    ...mockProfile,
-    skills: [...mockProfile.skills],
-  };
+/**
+ * Create or update the logged-in user's profile.
+ * The backend saves it to PostgreSQL.
+ */
+export async function saveProfile(
+  data: Profile
+): Promise<Profile> {
+  return apiFetch<Profile>("/profile/me", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 }
