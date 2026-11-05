@@ -24,7 +24,7 @@ const emptyFilters: JobFilters = {
 };
 
 function JobsPage() {
-  // Jobs returned by the mock API.
+ // Jobs returned by the real FastAPI backend.
   const [jobs, setJobs] = useState<Job[]>([]);
 
   // Pagination.
