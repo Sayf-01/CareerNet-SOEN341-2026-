@@ -1,117 +1,62 @@
 
-import { mockJobs } from "../mocks/jobs";
-import { ALL_FILTER_VALUE } from "../constants/jobFilters";
+import { apiFetch, ApiError } from "./client";
 
 import type {
-  Job,
   JobDetail,
   JobListResponse,
   JobSearchParams,
 } from "../types/job";
 
-// Number of jobs displayed on each page.
+// Number of jobs displayed per page.
 export const JOBS_PER_PAGE = 10;
 
-// Simulate a short API response delay.
-const mockDelay = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-/**
- * Get jobs with optional search filters and pagination.
- *
- * DA-1: Job listing with pagination.
- * DA-2: Keyword, location and category filtering.
- * DA-5: Replace mock logic with real backend requests.
- */
+// Get real jobs from the FastAPI backend.
 export async function searchJobs(
   params: JobSearchParams = {}
 ): Promise<JobListResponse> {
-  await mockDelay(200);
-
-  const requestedPage = params.page ?? 1;
+  const query = new URLSearchParams();
 
   const page =
-    Number.isInteger(requestedPage) && requestedPage > 0
-      ? requestedPage
+    params.page !== undefined &&
+    Number.isSafeInteger(params.page) &&
+    params.page > 0
+      ? params.page
       : 1;
 
-  // Normalize the keyword to make searching case-insensitive.
-  const keyword = (params.keyword ?? "")
-    .trim()
-    .toLowerCase();
+  query.set("page", String(page));
 
-  const location = params.location ?? ALL_FILTER_VALUE;
-  const category = params.category ?? ALL_FILTER_VALUE;
+  if (params.keyword?.trim()) {
+    query.set("keyword", params.keyword.trim());
+  }
 
-  // Apply all active filters together.
-  const filteredJobs = mockJobs.filter((job) => {
-    // Keyword can match title, company or description.
-    const matchesKeyword =
-      keyword === "" ||
-      job.title.toLowerCase().includes(keyword) ||
-      job.company.toLowerCase().includes(keyword) ||
-      job.description.toLowerCase().includes(keyword);
+  if (params.location?.trim()) {
+    query.set("location", params.location.trim());
+  }
 
-    // Empty location means "All Locations".
-    const matchesLocation =
-      location === ALL_FILTER_VALUE ||
-      job.location === location;
+  if (params.category?.trim()) {
+    query.set("category", params.category.trim());
+  }
 
-    // Empty category means "All Categories".
-    const matchesCategory =
-      category === ALL_FILTER_VALUE ||
-      job.category === category;
-
-    // A job must satisfy every active filter.
-    return (
-      matchesKeyword &&
-      matchesLocation &&
-      matchesCategory
-    );
-  });
-
-  // Total matching jobs BEFORE pagination.
-  const total = filteredJobs.length;
-
-  // Apply pagination AFTER filtering.
-  const startIndex = (page - 1) * JOBS_PER_PAGE;
-  const endIndex = startIndex + JOBS_PER_PAGE;
-
-  const pageJobs = filteredJobs.slice(
-    startIndex,
-    endIndex
+  return apiFetch<JobListResponse>(
+    `/jobs?${query.toString()}`
   );
-
-  // Return only the fields needed by the job cards.
-  const items: Job[] = pageJobs.map((job) => ({
-    id: job.id,
-    title: job.title,
-    company: job.company,
-    location: job.location,
-    category: job.category,
-    posted_at: job.posted_at,
-  }));
-
-  return {
-    items,
-    total,
-  };
 }
 
-/**
- * Get full details of a single job.
- * Returns null if the job doesn't exist.
- */
+// Get details of a specific job from FastAPI.
 export async function getJob(
   id: number
 ): Promise<JobDetail | null> {
-  await mockDelay(200);
-
-  const job = mockJobs.find((item) => item.id === id);
-
-  if (!job) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
     return null;
   }
 
-  return { ...job };
+  try {
+    return await apiFetch<JobDetail>(`/jobs/${id}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
 }
