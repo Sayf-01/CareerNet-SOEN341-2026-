@@ -12,6 +12,5 @@ class Application(Base):
     applied_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True),server_default=func.now(),onupdate=func.now(),nullable=False)
     cover_note = Column(String(1000), nullable=True)  # optional message to the recruiter
-    interview_at = Column(DateTime(timezone=True), nullable=True)  # set when the status is Interview
 
     __table_args__ = (UniqueConstraint('user_id', 'job_id', name='uq_application_user_job'),)
