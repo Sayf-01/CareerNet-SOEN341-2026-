@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
-from App.core.deps import get_current_user
+from App.core.dependencies import get_current_user
 from App.crud import resumes as resume_crud  # Kaila's resume functions
 from App.database.connection import get_db
 from App.models.user import User
