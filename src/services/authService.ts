@@ -44,7 +44,12 @@ async function mockLogin(payload: LoginRequest): Promise<LoginResponse> {
   return {
     access_token: "mock-token-123",
     token_type: "bearer",
-    user: { id: "1", email: payload.email, role: "JOB_SEEKER" },
+    user: {
+      id: 1,
+      full_name: "Mock User",
+      email: payload.email,
+      role: "JOB_SEEKER",
+    },
   };
 }
 

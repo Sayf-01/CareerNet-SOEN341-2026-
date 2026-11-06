@@ -1,65 +1,39 @@
 
-import { getResumes } from "./resumes";
+import { apiFetch, ApiError } from "./client";
 
-// The response returned after submitting an application.
+// Response returned after submitting an application.
 export interface ApplicationResponse {
   id: number;
-  status: "Applied";
+  status: string;
   applied_at: string;
   message: string;
 }
 
-// Error with an HTTP-like status code for mock testing.
-
-export class ApplicationError extends Error {
-  status: number;
-
+// Keep compatibility with the existing ApplyDialog.
+export class ApplicationError extends ApiError {
   constructor(message: string, status: number) {
-    super(message);
+    super(message, status);
     this.name = "ApplicationError";
-    this.status = status;
   }
 }
 
-
-// Temporary mock storage for submitted applications.
-const mockApplications = new Map<
-  number,
-  {
-    resumeId: number;
-    coverNote: string;
-    response: ApplicationResponse;
-  }
->();
-
-let nextApplicationId = 1;
-
-// Submit a job application using mock data.
+/**
+ * Submit a real application to FastAPI.
+ * The backend saves it in PostgreSQL.
+ */
 export async function applyToJob(
   jobId: number,
   resumeId: number,
   coverNote: string = ""
 ): Promise<ApplicationResponse> {
-
-  // Check whether the user has already applied.
-  if (mockApplications.has(jobId)) {
-    throw new ApplicationError(
-      "You have already applied to this job",
-      409
-    );
+  if (!Number.isSafeInteger(jobId) || jobId <= 0) {
+    throw new ApplicationError("Invalid job.", 400);
   }
 
-  // Make sure a resume is selected and exists.
-  const resumes = await getResumes();
-
-  if (!resumes.some((resume) => resume.id === resumeId)) {
-    throw new ApplicationError(
-      "Please select a valid resume.",
-      400
-    );
+  if (!Number.isSafeInteger(resumeId) || resumeId <= 0) {
+    throw new ApplicationError("Please select a valid resume.", 400);
   }
 
-  // Check the maximum cover note length.
   if (coverNote.length > 1000) {
     throw new ApplicationError(
       "Cover note cannot exceed 1000 characters.",
@@ -67,18 +41,23 @@ export async function applyToJob(
     );
   }
 
-  const response: ApplicationResponse = {
-    id: nextApplicationId++,
-    status: "Applied",
-    applied_at: new Date().toISOString(),
-    message: "Application submitted",
-  };
+  try {
+    return await apiFetch<ApplicationResponse>("/applications", {
+      method: "POST",
+      body: JSON.stringify({
+        job_id: jobId,
+        resume_id: resumeId,
+        cover_note: coverNote,
+      }),
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
+      throw new ApplicationError(
+        "You have already applied to this job.",
+        409
+      );
+    }
 
-  mockApplications.set(jobId, {
-    resumeId,
-    coverNote,
-    response,
-  });
-
-  return { ...response };
+    throw error;
+  }
 }
