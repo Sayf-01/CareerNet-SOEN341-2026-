@@ -1,14 +1,7 @@
 
 import { apiFetch } from "./client";
 
-export const JOB_CATEGORIES = [
-  "Software Development",
-  "Data and AI",
-  "Design",
-  "Marketing",
-  "Finance",
-  "Customer Support",
-] as const;
+
 
 // Information entered in the job posting form.
 export interface CreateJobData {
@@ -57,4 +50,27 @@ export async function getApplicationsForJob(
   return apiFetch<RecruiterApplication[]>(
     `/recruiter/jobs/${jobId}/applications`
   );
+}
+
+
+
+/**
+ * One posting in the recruiter's job list.
+ */
+export interface RecruiterPosting {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  category: string;
+  status: "open" | "archived";
+  posted_at: string;
+  application_count: number;
+}
+
+/**
+ * Get all postings belonging to the logged-in recruiter.
+ */
+export async function getMyJobs(): Promise<RecruiterPosting[]> {
+  return apiFetch<RecruiterPosting[]>("/recruiter/jobs");
 }
