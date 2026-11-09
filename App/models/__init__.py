@@ -7,3 +7,4 @@ from App.models.profile import Profile
 from App.models.resumeFile import ResumeFile
 from App.models.job import Job
 from .application import Application
+from App.models.notification import Notification
