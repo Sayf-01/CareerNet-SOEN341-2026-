@@ -35,23 +35,32 @@ jobs and review applicants.
 ## Features
 
 **Job seekers**
-- Account registration (#5)
-- Login (#6)
-- Resume upload and update (#16)
-- Application status tracking: Applied, Interview, Offered, Rejected (#17)
-- Notifications for job postings and deadlines (#18)
-- Applications dashboard (#19)
-- AI-generated resume feedback (#20)
-- Career goal and CV-based job matching (#26)
-- Job search and filtering (#27)
-- Save jobs to favourites (#28)
+- Account registration and login (#5, #6)
+- Profile: name, headline, location, phone, summary and skills
+- Resume upload, replace, download and delete (#16)
+- Job search and filtering by keyword, location and category (#27)
+- Apply to a job with a resume and an optional note
+- Application status tracking: Applied, Under Review, Interview, Offered, Rejected (#17)
 
 **Recruiters**
 - Create job postings (#21)
-- Edit or close job postings (#22)
-- View applicants for a posting (#23)
-- Update applicant status (#24)
-- Search and filter candidates (#25)
+- View the applicants for a posting (#23)
+- Update an applicant's status (#24)
+
+**In progress (Sprint 3)**
+- Recruiters: list, edit and archive their postings, and filter applicants (#22, #25)
+- Job seekers: applications dashboard with a status breakdown and activity over time (#19)
+- Notifications for status changes, interview invitations, new applications and interview reminders (#18)
+
+**Planned for Sprint 4**
+- AI feature: resume feedback or job matching (#20, #26)
+- Save jobs to favourites (#28)
+
+## API
+
+- All API paths start with `/api/v1`.
+- Wrong or missing input returns `400` with a message in `detail`.
+- The interactive API docs are at `/docs` when the backend is running (for example http://localhost:8000/docs).
 
 
 ## Set up
@@ -73,7 +82,6 @@ jobs and review applicants.
   ```bash
   source .venv/bin/activate
   ```
-
 
 
 **Step 4: install all dependencies**
@@ -135,13 +143,22 @@ python -m scripts.seed_jobs
 
 ## Running Tests
 
-Before submitting code, ensure that all automated tests pass. Both test suites run locally against isolated environments and will not affect the production database.
+Before submitting code, make sure all automated tests pass. The tests use their own temporary databases and never touch the shared Neon database. CI runs the same checks on every pull request into `main`.
 
-Run both frontend and backend tests from the repository root:
+**Backend** (from the repository root, with the virtual environment on):
 ```bash
-npm test && pytest
+.venv/bin/python -m pytest -q
+```
+On Windows PowerShell: `.\.venv\Scripts\python -m pytest -q`
+
+**Frontend:**
+```bash
+npm test
 ```
 
+More details on what is tested and how: [Documentation/TESTING.md](Documentation/TESTING.md).
+
+**Test data:** `python -m scripts.seed_jobs` loads 18 sample jobs, and `python -m scripts.seed_demo_data` loads demo accounts, applications and notifications. Both write to the database in your `.env`, are safe to run twice, and are never run by the tests.
 
 ## Repository
 https://github.com/Sayf-01/SOEN341-2026
