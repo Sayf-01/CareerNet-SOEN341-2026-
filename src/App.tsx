@@ -16,6 +16,7 @@ import JobDetailPage from "./pages/JobDetailPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
 
 import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
+import RecruiterJobPage from "./pages/RecruiterJobPage";
 
 function App() {
   return (
@@ -87,6 +88,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+  path="/recruiter/jobs/:id"
+  element={
+    <ProtectedRoute requiredRole="RECRUITER">
+      <RecruiterJobPage />
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
