@@ -15,7 +15,7 @@ export interface CreateJobData {
 // Job returned by the backend.
 export interface RecruiterJob extends CreateJobData {
   id: number;
-  status: "open";
+  status: "open" | "archived";
   posted_at: string;
 }
 
@@ -73,4 +73,49 @@ export interface RecruiterPosting {
  */
 export async function getMyJobs(): Promise<RecruiterPosting[]> {
   return apiFetch<RecruiterPosting[]>("/recruiter/jobs");
+}
+
+
+/**
+ * Update only the changed fields of a recruiter's posting.
+ */
+export async function updateJob(
+  jobId: number,
+  fields: Partial<CreateJobData>
+): Promise<RecruiterJob> {
+  return apiFetch<RecruiterJob>(
+    `/recruiter/jobs/${jobId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(fields),
+    }
+  );
+}
+
+/**
+ * Archive a recruiter's job posting.
+ */
+export async function archiveJob(
+  jobId: number
+): Promise<RecruiterJob> {
+  return apiFetch<RecruiterJob>(
+    `/recruiter/jobs/${jobId}/archive`,
+    {
+      method: "POST",
+    }
+  );
+}
+
+/**
+ * Restore an archived posting to open status.
+ */
+export async function unarchiveJob(
+  jobId: number
+): Promise<RecruiterJob> {
+  return apiFetch<RecruiterJob>(
+    `/recruiter/jobs/${jobId}/unarchive`,
+    {
+      method: "POST",
+    }
+  );
 }
