@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from App.core.dependencies import require_recruiter
 from App.database.connection import get_db
@@ -8,11 +9,38 @@ from App.models.job import Job
 from App.models.application import Application
 from App.models.profile import Profile
 from App.schemas.job import JobDetail
-from App.schemas.recruiter import CreateJobRequest, ReceivedApplication
-
+from App.schemas.recruiter import CreateJobRequest, ReceivedApplication, RecruiterJobListItem
 
 router = APIRouter(prefix="/recruiter", tags=["recruiter"])
+@router.get("/jobs", response_model=list[RecruiterJobListItem])
+def list_my_postings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_recruiter),
+):
+    """List all postings belonging to the logged-in recruiter."""
 
+    results = (
+        db.query(Job, func.count(Application.id))
+        .outerjoin(Application, Application.job_id == Job.id)
+        .filter(Job.recruiter_id == current_user.id)
+        .group_by(Job.id)
+        .order_by(Job.posted_at.desc(), Job.id.desc())
+        .all()
+    )
+
+    return [
+        RecruiterJobListItem(
+            id=job.id,
+            title=job.title,
+            company=job.company,
+            location=job.location,
+            category=job.category,
+            status=job.status,
+            posted_at=job.posted_at,
+            application_count=count,
+        )
+        for job, count in results
+    ]
 
 @router.post("/jobs", response_model=JobDetail, status_code=status.HTTP_201_CREATED)
 def create_job(
