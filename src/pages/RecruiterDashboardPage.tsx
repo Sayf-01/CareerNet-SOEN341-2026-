@@ -1,9 +1,10 @@
 
-import { useState, type FormEvent } from "react";
-
+import { useEffect, useState, type FormEvent } from "react";
+import { getJob } from "../api/jobs";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import Alert from "../components/Alert";
+import { useAuth } from "../context/useAuth";
 
 import {
   JOB_CATEGORIES,
@@ -40,12 +41,68 @@ function RecruiterDashboardPage() {
   const [createdJob, setCreatedJob] =
     useState<RecruiterJob | null>(null);
 
+  const [existingJobId, setExistingJobId] = useState("");
+
+  const { user } = useAuth();
+
+const lastJobStorageKey =
+  `careernet:lastRecruiterJob:${user?.id ?? "unknown"}`;
+
   const [applications, setApplications] = useState<
     RecruiterApplication[]
   >([]);
 
   const [showApplications, setShowApplications] =
     useState(false);
+
+
+useEffect(() => {
+  const savedId = sessionStorage.getItem(lastJobStorageKey);
+
+  if (!savedId) return;
+
+  const jobId = Number(savedId);
+
+  if (!Number.isSafeInteger(jobId) || jobId <= 0) {
+    return;
+  }
+
+  let cancelled = false;
+
+  async function restoreJob() {
+    try {
+      const receivedApplications =
+        await getApplicationsForJob(jobId);
+
+      const job = await getJob(jobId);
+
+      if (!job || job.status !== "open") {
+        throw new Error("Open job not found.");
+      }
+
+      if (cancelled) return;
+
+      setExistingJobId(String(jobId));
+      setCreatedJob({ ...job, status: "open" });
+      setApplications(receivedApplications);
+      setShowApplications(true);
+    } catch (err) {
+      if (!cancelled) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to restore the selected job."
+        );
+      }
+    }
+  }
+
+  void restoreJob();
+
+  return () => {
+    cancelled = true;
+  };
+}, [lastJobStorageKey]);
 
   // Update the form as the recruiter types.
   const handleChange = (
@@ -120,6 +177,7 @@ function RecruiterDashboardPage() {
       const job = await createJob(form);
 
       setCreatedJob(job);
+      sessionStorage.setItem(lastJobStorageKey, String(job.id));
       setForm({ ...emptyForm });
       setErrors({});
 
@@ -160,6 +218,53 @@ function RecruiterDashboardPage() {
       setIsLoadingApplications(false);
     }
   };
+
+
+const handleLoadExistingJob = async (
+  event: FormEvent<HTMLFormElement>
+) => {
+  event.preventDefault();
+
+  const jobId = Number(existingJobId);
+
+  if (!Number.isSafeInteger(jobId) || jobId <= 0) {
+    setError("Please enter a valid Job ID.");
+    return;
+  }
+
+  setError("");
+  setSuccess("");
+  setIsLoadingApplications(true);
+  setShowApplications(false);
+  setCreatedJob(null);
+
+  try {
+    // Check that the recruiter owns this job.
+    const receivedApplications =
+      await getApplicationsForJob(jobId);
+
+    // Retrieve the real job details.
+    const job = await getJob(jobId);
+
+    if (!job || job.status !== "open") {
+      throw new Error("Open job not found.");
+    }
+
+    setCreatedJob({ ...job, status: "open" });
+    setApplications(receivedApplications);
+    setShowApplications(true);
+    sessionStorage.setItem(lastJobStorageKey, String(jobId));
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Unable to load this job."
+    );
+  } finally {
+    setIsLoadingApplications(false);
+  }
+};
+
 
   return (
     <main
@@ -356,6 +461,44 @@ function RecruiterDashboardPage() {
           }}
         >
           <h2>Posted Job</h2>
+
+<form
+  onSubmit={handleLoadExistingJob}
+  style={{ marginTop: "16px", marginBottom: "24px" }}
+>
+  <label htmlFor="existing-job-id">
+    <strong>Load Existing Job by ID</strong>
+  </label>
+
+  <input
+    id="existing-job-id"
+    type="number"
+    min="1"
+    value={existingJobId}
+    onChange={(event) =>
+      setExistingJobId(event.target.value)
+    }
+    placeholder="e.g. 19"
+    style={{
+      display: "block",
+      padding: "10px",
+      marginTop: "8px",
+      marginBottom: "12px",
+      width: "100%",
+      boxSizing: "border-box",
+    }}
+  />
+
+  <Button
+    type="submit"
+    disabled={isLoadingApplications}
+  >
+    {isLoadingApplications
+      ? "Loading..."
+      : "Load Job and Applications"}
+  </Button>
+</form>
+
 
           {!createdJob ? (
             <p style={{ marginTop: "16px" }}>
