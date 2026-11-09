@@ -123,7 +123,7 @@ function JobDetailPage() {
     day: "numeric",
   });
 
-  const isClosed = job.status === "closed";
+  const isClosed = job.status !== "open";
 
   return (
     <main style={containerStyle}>
