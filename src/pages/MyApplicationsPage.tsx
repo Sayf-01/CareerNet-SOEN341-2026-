@@ -176,16 +176,6 @@ function MyApplicationsPage() {
               </table>
             </div>
 
-            <p
-              style={{
-                marginTop: "16px",
-                fontSize: "13px",
-                color: "#57606a",
-              }}
-            >
-              Application information is currently
-              demonstration data.
-            </p>
           </>
         )}
       </section>
