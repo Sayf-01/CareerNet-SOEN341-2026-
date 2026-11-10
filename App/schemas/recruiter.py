@@ -36,3 +36,13 @@ class ReceivedApplication(BaseModel):
     resume_id: int | None
     status: str
     applied_at: datetime
+
+class RecruiterJobListItem(BaseModel):
+    id: int
+    title: str
+    company: str
+    location: str
+    category: str
+    status: str
+    posted_at: datetime
+    application_count: int
