@@ -1,0 +1,2 @@
+OPEN = "open"
+ARCHIVED = "archived"
