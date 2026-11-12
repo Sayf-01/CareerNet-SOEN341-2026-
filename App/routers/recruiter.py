@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from App.core.dependencies import require_recruiter
 from App.database.connection import get_db
@@ -11,9 +12,39 @@ from App.schemas.job import JobDetail
 from App.schemas.recruiter import CreateJobRequest, ReceivedApplication
 from datetime import date, datetime, time, timedelta, timezone
 from App.application_statuses import ALL_STATUSES
+from App.schemas.recruiter import CreateJobRequest, ReceivedApplication, RecruiterJobListItem, JobUpdate
+from App.job_statuses import OPEN, ARCHIVED
 
 router = APIRouter(prefix="/recruiter", tags=["recruiter"])
+@router.get("/jobs", response_model=list[RecruiterJobListItem])
+def list_my_postings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_recruiter),
+):
+    """List all postings belonging to the logged-in recruiter."""
 
+    results = (
+        db.query(Job, func.count(Application.id))
+        .outerjoin(Application, Application.job_id == Job.id)
+        .filter(Job.recruiter_id == current_user.id)
+        .group_by(Job.id)
+        .order_by(Job.posted_at.desc(), Job.id.desc())
+        .all()
+    )
+
+    return [
+        RecruiterJobListItem(
+            id=job.id,
+            title=job.title,
+            company=job.company,
+            location=job.location,
+            category=job.category,
+            status=job.status,
+            posted_at=job.posted_at,
+            application_count=count,
+        )
+        for job, count in results
+    ]
 
 @router.post("/jobs", response_model=JobDetail, status_code=status.HTTP_201_CREATED)
 def create_job(
@@ -39,6 +70,99 @@ def create_job(
 
     return new_job
 
+
+@router.patch("/jobs/{id}", response_model=JobDetail)
+def update_job(
+    id: int,
+    data: JobUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_recruiter),
+):
+    """Edit a job posting owned by the recruiter."""
+
+    job = (
+        db.query(Job)
+        .filter(
+            Job.id == id,
+            Job.recruiter_id == current_user.id,
+        )
+        .first()
+    )
+
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    changes = data.model_dump(exclude_unset=True)
+
+    if not changes:
+        raise HTTPException(
+            status_code=400,
+            detail="Send at least one field to change",
+        )
+
+    for field, value in changes.items():
+        setattr(job, field, value)
+
+    db.commit()
+    db.refresh(job)
+
+    return job
+
+
+@router.post("/jobs/{id}/archive", response_model=JobDetail)
+def archive_job(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_recruiter),
+):
+    """Archive a job posting owned by the recruiter."""
+
+    job = (
+        db.query(Job)
+        .filter(
+            Job.id == id,
+            Job.recruiter_id == current_user.id,
+        )
+        .first()
+    )
+
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job.status = ARCHIVED
+
+    db.commit()
+    db.refresh(job)
+
+    return job
+
+
+@router.post("/jobs/{id}/unarchive", response_model=JobDetail)
+def unarchive_job(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_recruiter),
+):
+    """Reopen an archived job posting."""
+
+    job = (
+        db.query(Job)
+        .filter(
+            Job.id == id,
+            Job.recruiter_id == current_user.id,
+        )
+        .first()
+    )
+
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job.status = OPEN
+
+    db.commit()
+    db.refresh(job)
+
+    return job
 
 @router.get(
     "/jobs/{id}/applications",
