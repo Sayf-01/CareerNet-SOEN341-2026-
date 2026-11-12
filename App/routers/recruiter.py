@@ -9,6 +9,9 @@ from App.models.job import Job
 from App.models.application import Application
 from App.models.profile import Profile
 from App.schemas.job import JobDetail
+from App.schemas.recruiter import CreateJobRequest, ReceivedApplication
+from datetime import date, datetime, time, timedelta, timezone
+from App.application_statuses import ALL_STATUSES
 from App.schemas.recruiter import CreateJobRequest, ReceivedApplication, RecruiterJobListItem, JobUpdate
 from App.job_statuses import OPEN, ARCHIVED
 
@@ -167,11 +170,15 @@ def unarchive_job(
 )
 def get_job_applications(
     id: int,
+    status: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_recruiter),
 ):
-    """View applications received for a recruiter's own job."""
+    """View and filter applications for the recruiter's own job."""
 
+    # Verify that the recruiter owns this job.
     job = (
         db.query(Job)
         .filter(
@@ -187,12 +194,55 @@ def get_job_applications(
             detail="Job not found",
         )
 
-    results = (
+    # Validate application status.
+    if status is not None and status not in ALL_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid application status",
+        )
+
+    # Validate date range.
+    if (
+        date_from is not None
+        and date_to is not None
+        and date_from > date_to
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="date_from cannot be after date_to",
+        )
+
+    # Start with all applications for this job.
+    query = (
         db.query(Application, User, Profile)
         .join(User, Application.user_id == User.id)
         .outerjoin(Profile, Profile.user_id == User.id)
         .filter(Application.job_id == id)
-        .order_by(Application.applied_at.desc())
+    )
+
+    # Apply the optional status filter.
+    if status is not None:
+        query = query.filter(Application.status == status)
+
+    # Include the entire starting day (UTC).
+    if date_from is not None:
+        start = datetime.combine(
+            date_from, time.min, tzinfo=timezone.utc
+        )
+        query = query.filter(Application.applied_at >= start)
+
+    # Include the entire ending day (UTC).
+    if date_to is not None:
+        end = datetime.combine(
+            date_to + timedelta(days=1),
+            time.min,
+            tzinfo=timezone.utc,
+        )
+        query = query.filter(Application.applied_at < end)
+
+    # Return newest applications first.
+    results = (
+        query.order_by(Application.applied_at.desc())
         .all()
     )
 
