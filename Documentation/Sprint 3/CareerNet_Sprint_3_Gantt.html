@@ -1,0 +1,325 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CareerNet Sprint 3 Gantt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: sticky label column + day grid; bars positioned by day; dependency lines drawn in an SVG overlay. */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#1a2330; --muted:#5b6778; --line:#dde1e8; --weekend:#eceff3;
+  --today:#d97706; --accent:#2563eb; --on-bar:#ffffff; --dep:#475569; --chain:#e11d48;
+  --c-Sayf:#2563eb; --c-Kaila:#c2410c; --c-Lamees:#0f766e; --c-Youssef:#7c3aed; --c-Dany:#be185d; --c-Krish:#4d7c0f;
+  --stripe:rgba(255,255,255,.38); --late:#dc2626; --ms:#334155;
+  --font-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif; --font-head:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1218; --surface:#161b23; --ink:#e7ebf1; --muted:#97a3b4; --line:#29313d; --weekend:#1b212b;
+  --today:#f59e0b; --accent:#60a5fa; --on-bar:#0b1020; --dep:#9aa7b8; --chain:#fb7185;
+  --c-Sayf:#60a5fa; --c-Kaila:#fb923c; --c-Lamees:#2dd4bf; --c-Youssef:#a78bfa; --c-Dany:#f472b6; --c-Krish:#a3e635;
+  --stripe:rgba(0,0,0,.28); --late:#f87171; --ms:#cbd5e1; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1218; --surface:#161b23; --ink:#e7ebf1; --muted:#97a3b4; --line:#29313d; --weekend:#1b212b;
+  --today:#f59e0b; --accent:#60a5fa; --on-bar:#0b1020; --dep:#9aa7b8; --chain:#fb7185;
+  --c-Sayf:#60a5fa; --c-Kaila:#fb923c; --c-Lamees:#2dd4bf; --c-Youssef:#a78bfa; --c-Dany:#f472b6; --c-Krish:#a3e635;
+  --stripe:rgba(0,0,0,.28); --late:#f87171; --ms:#cbd5e1; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.45;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--font-head);font-size:26px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:70ch}
+.controls{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:999px;padding:4px 11px 4px 8px;font:inherit;font-size:13px;cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--oc)}
+.chip small{color:var(--muted);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{outline:2px solid var(--oc);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:5px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-bar)}
+label.tg{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--ink);cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;color:var(--muted);font-size:13px}
+.stats b{color:var(--ink);font-family:var(--font-head);font-size:18px;font-variant-numeric:tabular-nums;margin-right:4px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.grid{--lw:270px;--dw:46px;--rh:30px;position:relative;min-width:calc(var(--lw) + 13*var(--dw));font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:var(--lw) 1fr;height:var(--rh);border-bottom:1px solid var(--line)}
+.row.head{height:48px;position:sticky;top:0;z-index:5;background:var(--surface)}
+.row.grp{height:30px;background:var(--weekend)}
+.lab{position:sticky;left:0;z-index:4;background:inherit;background-color:var(--surface);display:flex;align-items:center;gap:8px;padding:0 10px;
+  border-right:1px solid var(--line);min-width:0;font-size:13px}
+.row.grp .lab{background-color:var(--weekend);font-family:var(--font-head);font-weight:600;font-size:13px}
+.row.head .lab{background-color:var(--surface);color:var(--muted);font-size:12px}
+.gn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.gm{position:absolute;left:10px;top:0;height:100%;display:flex;align-items:center;font-size:12px;color:var(--muted);z-index:1;white-space:nowrap}
+.lab .id{font-weight:600;flex:none}
+.lab .tt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);min-width:0}
+.lab .od{width:8px;height:8px;border-radius:50%;background:var(--oc);flex:none}
+.tl{position:relative;display:grid;grid-template-columns:repeat(13,1fr)}
+.cell{border-left:1px solid var(--line)}
+.cell.we{background:var(--weekend)}
+.row.grp .cell.we{background:transparent}
+.dh{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--muted);line-height:1.2}
+.dh b{font-size:13px;color:var(--ink)}
+.dh.today b{color:var(--today)}
+.todaycol{position:absolute;top:0;bottom:0;border-left:2px solid var(--today);border-right:2px solid var(--today);background:color-mix(in srgb,var(--today) 9%,transparent);pointer-events:none;z-index:1}
+.bar{position:absolute;top:5px;height:calc(var(--rh) - 10px);border-radius:5px;background:var(--oc);color:var(--on-bar);border:0;font:inherit;font-size:11px;font-weight:600;
+  display:flex;align-items:center;padding:0 6px;cursor:pointer;z-index:2;overflow:hidden;white-space:nowrap}
+.bar.p2{background-image:repeating-linear-gradient(135deg,var(--stripe) 0 4px,transparent 4px 8px);outline:1.5px dashed var(--oc);outline-offset:1px}
+.bar.done{opacity:.5}
+.bar.late::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:var(--late);box-shadow:0 0 0 1.5px var(--surface)}
+.lab .lt{flex:none;margin-left:auto;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--late)}
+.lab input.mk{margin:0;flex:none;width:15px;height:15px;accent-color:var(--oc);cursor:pointer}
+.lab input.mk:disabled{cursor:default}
+.lab .dn{flex:none;margin-left:auto;font-size:11px;color:var(--muted)}
+.bar.dim{opacity:.18}
+.bar.sel{box-shadow:0 0 0 2px var(--ink)}
+.bar.rel{box-shadow:0 0 0 2px var(--accent)}
+.bar.chain{box-shadow:0 0 0 2px var(--chain)}
+.lab.dim,.row.dimrow .lab{opacity:.35}
+svg.deps{position:absolute;left:var(--lw);right:0;top:0;bottom:0;width:calc(100% - var(--lw));height:100%;pointer-events:none;z-index:3;overflow:visible}
+svg.deps path{fill:none;stroke:var(--dep);stroke-width:1.4;opacity:.75}
+svg.deps path.hot{stroke:var(--accent);stroke-width:2;opacity:1}
+svg.deps path.chain{stroke:var(--chain);stroke-width:2.2;opacity:1}
+svg.deps path.soft{stroke-dasharray:4 3}
+svg.deps path.dimp{opacity:.1}
+.row.ms{height:38px;background:var(--surface)}
+.row.ms .lab{color:var(--muted);font-size:12px}
+.msm{position:absolute;top:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transform:translateX(-50%);
+  border:0;background:transparent;color:var(--ink);font:inherit;font-size:10px;font-weight:600;cursor:pointer;padding:0 2px;white-space:nowrap;z-index:2}
+.msm i{width:10px;height:10px;background:var(--ms);transform:rotate(45deg);border-radius:1px}
+.msm.sel i{background:var(--accent)}
+.msline{position:absolute;top:86px;bottom:0;width:0;border-left:2px dashed var(--ms);opacity:.55;pointer-events:none;z-index:1}
+.msline.dl{border-left-color:var(--late);opacity:.7}
+.detail label.tg{margin-top:12px}
+.keyd{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--muted);font-size:12px}
+.keyd b{color:var(--ink);font-weight:600}
+svg.deps marker path{fill:currentColor;stroke:none}
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-height:96px}
+.detail h2{font-family:var(--font-head);font-size:16px;margin:0 0 6px}
+.detail dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 18px;margin:0}
+.detail dt{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.detail dd{margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:12px;align-items:center}
+.legend .sw{display:inline-block;width:26px;height:12px;border-radius:3px;background:var(--muted);vertical-align:middle;margin-right:6px}
+.legend .sw.p2{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.5) 0 3px,transparent 3px 6px);outline:1.5px dashed var(--muted);outline-offset:1px}
+.note{color:var(--muted);font-size:12px;max-width:80ch}
+@media (max-width:560px){.grid{--lw:150px;--dw:42px}.lab .tt,.lab .od{display:none}h1{font-size:22px}}
+@media (prefers-reduced-motion:no-preference){.bar{transition:opacity .15s}}
+</style>
+<div class="wrap">
+  <header>
+    <h1>CareerNet Sprint 3 Gantt</h1>
+    <p class="sub">All 43 tasks from the team plan, Wed Nov 4 to the sprint end on Mon Nov 16. Each bar runs from the task's start to its end date in the plan. Tick the box beside a task when its pull request is merged. Select a bar to see what it needs and what waits on it.</p>
+  </header>
+  <div class="stats" id="stats"></div>
+  <p class="note" id="sync" style="margin:-8px 0 0"></p>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Group rows by"><button id="gStory" aria-pressed="true">By story</button><button id="gPerson" aria-pressed="false">By person</button></div>
+    <label class="tg"><input type="checkbox" id="allDeps"> Show all dependencies</label>
+    <label class="tg"><input type="checkbox" id="chainTg"> Longest dependency chain</label>
+    <div class="chips" id="chips" role="group" aria-label="Filter by owner"></div>
+  </div>
+  <div class="chart" id="chart"><div class="grid" id="grid"></div></div>
+  <div class="legend"><span><span class="sw"></span>P1 task</span><span><span class="sw p2"></span>P2 task (first to cut)</span><span>Faded bar with ✓ = merged</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--late);margin-right:6px"></span>Late: past its end date and not merged</span><span>Dashed arrow = needed for only part of the task</span><span>Shaded columns are weekends</span></div>
+  <div class="keyd" id="keyd"></div>
+  <section class="detail" id="detail" aria-live="polite"></section>
+  <p class="note">Source: the Team Guide's task table (ID, owner, hours, dates, needs first, priority), checked against each person's guide. Tasks with * after the hours have a P2 part inside a P1 task: KA-7 reminders, DA-6 day selector, YO-6 and DA-9 date filter, KR-9 resume view.</p>
+</div>
+<script>
+const TASKS=[{"id": "SA-16", "title": "Stories, issues, labels, board", "owner": "Sayf", "hours": 2, "start": 4, "end": 5, "prio": "P1", "needs": [], "group": "SH"}, {"id": "SA-12", "title": "Repo cleanup, saved work, minutes, git names", "owner": "Sayf", "hours": 3.5, "start": 4, "end": 7, "prio": "P1", "needs": ["KR-5"], "group": "SH"}, {"id": "KR-5", "title": "Merge the real-API integration (from Sprint 2)", "owner": "Krish", "hours": 3, "start": 4, "end": 7, "prio": "P1", "needs": [], "group": "SH"}, {"id": "DA-5", "title": "Review and test the real-API merge", "owner": "Dany", "hours": 1, "start": 5, "end": 7, "prio": "P1", "needs": ["KR-5"], "group": "SH"}, {"id": "KA-9", "title": "One login helper", "owner": "Kaila", "hours": 1.5, "start": 5, "end": 5, "prio": "P1", "needs": [], "group": "SH"}, {"id": "SA-13", "title": "Frontend test setup", "owner": "Sayf", "hours": 2.5, "start": 5, "end": 6, "prio": "P1", "needs": [], "group": "SH"}, {"id": "KA-6", "title": "Notifications table, interview date column, migration", "owner": "Kaila", "hours": 2.5, "start": 5, "end": 6, "prio": "P1", "needs": [], "group": "S3"}, {"id": "YO-4", "title": "List my postings", "owner": "Youssef", "hours": 2, "start": 6, "end": 8, "prio": "P1", "needs": ["KA-9"], "group": "S1"}, {"id": "LA-4", "title": "Status breakdown endpoint", "owner": "Lamees", "hours": 2, "start": 6, "end": 8, "prio": "P1", "needs": ["KA-9"], "group": "S2"}, {"id": "KA-7", "title": "Notification service", "owner": "Kaila", "hours": 3, "start": 6, "end": 9, "prio": "P1*", "needs": ["KA-6"], "group": "S3"}, {"id": "LA-5", "title": "Applications-over-time endpoint", "owner": "Lamees", "hours": 2.5, "start": 7, "end": 9, "prio": "P1", "needs": ["KA-9"], "group": "S2"}, {"id": "KR-6", "title": "Postings list page", "owner": "Krish", "hours": 2.5, "start": 7, "end": 10, "prio": "P1", "needs": ["KR-5", "YO-4"], "group": "S1"}, {"id": "YO-5", "title": "Edit and archive postings", "owner": "Youssef", "hours": 2.5, "start": 8, "end": 10, "prio": "P1", "needs": ["YO-4"], "group": "S1"}, {"id": "DA-6", "title": "Analytics dashboard", "owner": "Dany", "hours": 5, "start": 8, "end": 12, "prio": "P1*", "needs": ["KR-5", "LA-4", "LA-5", "SA-13"], "group": "S2"}, {"id": "YO-6", "title": "Applicant filters", "owner": "Youssef", "hours": 1.5, "start": 9, "end": 10, "prio": "P1*", "needs": ["KA-9"], "group": "S1"}, {"id": "LA-7", "title": "Notification endpoints", "owner": "Lamees", "hours": 2.5, "start": 9, "end": 11, "prio": "P1", "needs": ["KA-7"], "group": "S3"}, {"id": "KR-7", "title": "Edit and archive screen", "owner": "Krish", "hours": 2.5, "start": 9, "end": 11, "prio": "P1", "needs": ["KR-6", "YO-5"], "group": "S1"}, {"id": "DA-7", "title": "Notification bell and list page", "owner": "Dany", "hours": 3.5, "start": 9, "end": 13, "prio": "P1", "needs": ["KR-5", "LA-7", "SA-13"], "group": "S3"}, {"id": "YO-7", "title": "Status change with interview date and notification", "owner": "Youssef", "hours": 2.5, "start": 10, "end": 12, "prio": "P1", "needs": ["KA-6", "KA-7"], "group": "S1"}, {"id": "LA-8", "title": "New-application notification", "owner": "Lamees", "hours": 1, "start": 10, "end": 11, "prio": "P1", "needs": ["KA-7"], "group": "S3"}, {"id": "DA-9", "title": "Applicant list with filters", "owner": "Dany", "hours": 2.5, "start": 10, "end": 12, "prio": "P1*", "needs": ["KR-5", "YO-6", "KR-7"], "group": "S1"}, {"id": "KA-8", "title": "Demo data script", "owner": "Kaila", "hours": 1.5, "start": 10, "end": 12, "prio": "P2", "needs": ["KA-6"], "group": "S3"}, {"id": "KR-9", "title": "Status change, interview date, resume view", "owner": "Krish", "hours": 3, "start": 12, "end": 13, "prio": "P1*", "needs": ["DA-9", "YO-7"], "group": "S1"}, {"id": "YO-9", "title": "Recruiter views an applicant's resume", "owner": "Youssef", "hours": 1.5, "start": 12, "end": 13, "prio": "P2", "needs": ["KA-9"], "group": "S1"}, {"id": "KA-10", "title": "Requirements and README cleanup", "owner": "Kaila", "hours": 1, "start": 12, "end": 13, "prio": "P2", "needs": [], "group": "SH"}, {"id": "LA-11", "title": "AI feedback contract: schema, settings, docs", "owner": "Lamees", "hours": 1.5, "start": 7, "end": 8, "prio": "P1", "needs": [], "group": "S4"}, {"id": "SA-20", "title": "AI provider and key, US-6 issue and acceptance test", "owner": "Sayf", "hours": 1, "start": 7, "end": 9, "prio": "P1", "needs": [], "group": "S4"}, {"id": "KA-12", "title": "Read text from PDF and Word resumes", "owner": "Kaila", "hours": 2.5, "start": 8, "end": 10, "prio": "P1", "needs": [], "group": "S4"}, {"id": "YO-10", "title": "AI feedback service (fake mode and real call)", "owner": "Youssef", "hours": 2.5, "start": 8, "end": 10, "prio": "P1", "needs": ["LA-11"], "group": "S4"}, {"id": "DA-10", "title": "AI feedback panel", "owner": "Dany", "hours": 1.5, "start": 9, "end": 11, "prio": "P1", "needs": ["SA-13", "KR-5"], "group": "S4"}, {"id": "LA-10", "title": "AI feedback endpoint", "owner": "Lamees", "hours": 2.5, "start": 10, "end": 12, "prio": "P1", "needs": ["KA-12", "YO-10", "LA-11"], "group": "S4"}, {"id": "KR-11", "title": "Get AI feedback button on the resume list", "owner": "Krish", "hours": 1.5, "start": 11, "end": 13, "prio": "P1", "needs": ["DA-10", "LA-10"], "group": "S4"}, {"id": "KA-13", "title": "Limit AI requests per user per hour", "owner": "Kaila", "hours": 1, "start": 12, "end": 13, "prio": "P2", "needs": ["LA-10"], "group": "S4"}, {"id": "SA-14", "title": "Review and link acceptance tests", "owner": "Sayf", "hours": 1.5, "start": 6, "end": 10, "prio": "P1", "needs": [], "group": "SH"}, {"id": "SA-17", "title": "Keep CI green, check labels and board", "owner": "Sayf", "hours": 1, "start": 4, "end": 16, "prio": "P1", "needs": [], "group": "SH"}, {"id": "SA-15", "title": "Final acceptance test pass", "owner": "Sayf", "hours": 1.5, "start": 13, "end": 14, "prio": "P1", "needs": [], "group": "SH"}, {"id": "SA-18", "title": "One-page team report", "owner": "Sayf", "hours": 1.5, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}, {"id": "SA-19", "title": "Personal Sprint 3 PDF report", "owner": "Sayf", "hours": 1, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}, {"id": "KA-11", "title": "Personal Sprint 3 PDF report", "owner": "Kaila", "hours": 1, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}, {"id": "LA-9", "title": "Personal Sprint 3 PDF report", "owner": "Lamees", "hours": 1, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}, {"id": "YO-8", "title": "Personal Sprint 3 PDF report", "owner": "Youssef", "hours": 1, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}, {"id": "DA-8", "title": "Personal Sprint 3 PDF report", "owner": "Dany", "hours": 1, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}, {"id": "KR-10", "title": "Personal Sprint 3 PDF report", "owner": "Krish", "hours": 1, "start": 14, "end": 15, "prio": "P1", "needs": [], "group": "SH"}];
+const OWNERS={Sayf:"Database Backend (lead)",Kaila:"Database Backend",Lamees:"General Backend",Youssef:"General Backend",Dany:"Frontend",Krish:"Frontend"};
+const GROUPS=[["S1","Recruiter Dashboard and Posting Management","#22"],["S2","Application Analytics and History Dashboard","#24"],["S3","Notifications and Reminders","#18"],["S4","AI-Generated Resume Feedback","#20"],["SH","Shared work and project management","shared"]];
+// Links needed for only part of a task (drawn dashed, left out of the longest chain).
+const SOFT={"KR-9":{ids:["YO-9"],why:"YO-9 only for the resume view part (P2)"},"YO-10":{ids:["SA-20"],why:"SA-20 only for the real AI call (fake mode works without it)"}};
+// Things a task waits on that are not other tasks.
+const WAITS={"SA-14":"each owner's acceptance test draft (due Mon Nov 9)","SA-15":"every feature task merged (code complete, Fri Nov 13)","SA-18":"everyone's 2 to 3 sentence blurb (by Sat Nov 14)"};
+const MILESTONES=[[5,"Kickoff","Thu Nov 5","Kickoff meeting: confirm tasks and hours"],[6,"Shared","Fri Nov 6","Shared pieces merged (login helper, real-API merge, test setup, notifications table)"],[9,"AT drafts","Mon Nov 9","Acceptance test drafts due to Sayf"],[12,"Meeting","Thu Nov 12","Weekly meeting: demos, and the team decides which P2 work to build"],[13,"Code done","Fri Nov 13","Code complete"],[16,"Deadline","Mon Nov 16","Sprint deadline (end of day)"]];
+const P2_PARTS=3.5; // P2 parts inside P1 tasks: KA-7 reminder 1, YO-6 date 0.5, DA-9 date 0.5, DA-6 day selector 0.5, KR-9 resume view 1
+const DAY0=4, NDAYS=13, WD=["S","M","T","W","T","F","S"]; // Nov 4 2026 is a Wednesday
+TASKS.forEach(t=>{t.soft=SOFT[t.id]?SOFT[t.id].ids:[];});
+const byId=Object.fromEntries(TASKS.map(t=>[t.id,t]));
+const unlocks={}, softUnlocks={};
+TASKS.forEach(t=>{t.needs.forEach(n=>(unlocks[n]=unlocks[n]||[]).push(t.id)); t.soft.forEach(n=>(softUnlocks[n]=softUnlocks[n]||[]).push(t.id));});
+let mode="story", sel=null, selMs=null, ownerFilter=null;
+const $=s=>document.querySelector(s);
+const dow=d=>(3+(d-4))%7; // Nov 4 = Wed(3)
+const isWE=d=>[0,6].includes(dow(d));
+const todayN=(()=>{try{const n=new Date();return n.getFullYear()===2026&&n.getMonth()===10?n.getDate():null}catch(e){return null}})();
+
+// Merged marks, kept in this browser.
+// Merged ticks. On the published page they live in the shared database (collection "merged",
+// one document per task id: {by, at}), so everyone sees the same ticks. Opened as a plain file,
+// they fall back to this browser's storage.
+const KEY="careernet-s3-merged";
+let merged=new Map(), done=new Set(), syncMode="local", canWrite=true, db=null, userNS=null, myId=null, names={};
+try{JSON.parse(localStorage.getItem(KEY)||"[]").forEach(id=>merged.set(id,{}));}catch(e){}
+done=new Set(merged.keys());
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify([...merged.keys()]))}catch(e){}}
+function refresh(){done=new Set(merged.keys()); renderStats(); build();}
+async function setMerged(id,val){
+  if(!canWrite)return;
+  const prev=merged.get(id);
+  if(val)merged.set(id,{by:myId,at:new Date().toISOString()}); else merged.delete(id);
+  refresh();
+  if(syncMode==="local"){saveLocal();return;}
+  try{
+    const ref=db.doc("merged/"+id);
+    if(val)await ref.set({by:myId,at:merged.get(id).at}); else await ref.delete();
+  }catch(e){
+    if(prev)merged.set(id,prev); else merged.delete(id);
+    if(e&&e.code==="invalid_argument"){canWrite=false;syncMode="readonly";}
+    else syncNote="That change didn't save. Try again in a moment.";
+    refresh();
+  }
+}
+let syncNote="";
+function syncText(){
+  if(syncNote)return syncNote;
+  if(syncMode==="shared")return "Ticks are shared: everyone with access to this page sees the same ones.";
+  if(syncMode==="readonly")return "You can see the team's ticks but not change them. Ask Sayf for edit access.";
+  if(syncMode==="loading")return "Loading the team's ticks…";
+  return "Ticks are saved in this browser only.";
+}
+async function namesFor(ids){
+  if(!userNS||!ids.length)return;
+  const need=ids.filter(i=>i&&!(i in names)); if(!need.length)return;
+  try{const ps=await userNS.profiles(need); need.forEach(i=>names[i]=(ps&&ps[i]&&ps[i].name)||"Someone"); detail();}catch(e){}
+}
+async function connect(){
+  if(!window.claude||!window.claude.use)return;
+  try{db=await window.claude.use("db");}catch(e){db=null;}
+  if(!db)return;
+  try{userNS=await window.claude.use("user");}catch(e){userNS=null;}
+  try{if(userNS){myId=await userNS.id(); const c=await userNS.can("data.write"); if(c===false){canWrite=false;}}}catch(e){}
+  syncMode="loading"; merged=new Map(); refresh();
+  let timer=setTimeout(()=>{syncNote="Can't reach the team's ticks yet. What you see may be out of date.";renderStats();},10000);
+  db.collection("merged").onSnapshot(snap=>{
+    const m=new Map(); snap.docs.forEach(d=>{if(d.exists&&byId[d.id])m.set(d.id,d.data()||{});});
+    merged=m;
+    if(!snap.metadata.fromCache){clearTimeout(timer); if(syncNote.startsWith("Can't reach"))syncNote="";}
+    syncMode=canWrite?"shared":"readonly"; refresh();
+  },err=>{clearTimeout(timer); syncNote="The team's ticks can't be loaded right now."; renderStats();});
+}
+const isLate=t=>!done.has(t.id)&&todayN!==null&&t.end<todayN;
+
+// Longest chain of hard dependencies (by number of tasks, ties go to the later end).
+const memo={};
+function best(id){ if(memo[id])return memo[id]; const t=byId[id]; let b=[id];
+  t.needs.forEach(n=>{const c=best(n).concat(id); if(c.length>b.length)b=c;}); return memo[id]=b;}
+const chain=TASKS.map(t=>best(t.id)).sort((a,b)=>b.length-a.length||byId[b[b.length-1]].end-byId[a[a.length-1]].end)[0];
+const chainEdges=new Set(chain.slice(1).map((id,i)=>chain[i]+">"+id));
+
+function fmtH(h){return (h%1?h.toFixed(1):h)+"h"}
+function win(t){return t.start===t.end?"Nov "+t.start:"Nov "+t.start+" to "+t.end}
+
+function renderStats(){
+  const total=TASKS.reduce((s,t)=>s+t.hours,0), p2=TASKS.filter(t=>t.prio==="P2"), p2h=p2.reduce((s,t)=>s+t.hours,0);
+  const dn=TASKS.filter(t=>done.has(t.id)), late=TASKS.filter(isLate);
+  $("#stats").innerHTML=`<span><b>${dn.length}/${TASKS.length}</b>tasks merged (${fmtH(dn.reduce((s,t)=>s+t.hours,0))} of ${fmtH(total)})</span>`+
+    (todayN!==null?`<span><b>${late.length}</b>late</span>`:"")+
+    `<span><b>${fmtH(p2h+P2_PARTS)}</b>of P2 work: ${p2.length} P2 tasks (${fmtH(p2h)}) + ${fmtH(P2_PARTS)} of P2 parts inside P1 tasks</span><span><b>${chain.length}</b>tasks in the longest chain: ${chain.join(" → ")}</span>`;
+  const hrs={}; TASKS.forEach(t=>hrs[t.owner]=(hrs[t.owner]||0)+t.hours);
+  $("#chips").innerHTML=Object.keys(OWNERS).map(o=>`<button class="chip" style="--oc:var(--c-${o})" data-o="${o}" aria-pressed="${ownerFilter===o}"><i></i>${o} <small>${fmtH(hrs[o])}</small></button>`).join("");
+  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{ownerFilter=ownerFilter===b.dataset.o?null:b.dataset.o;renderStats();paint();});
+  $("#sync").textContent=syncText();
+  $("#keyd").innerHTML="<span>Key dates:</span>"+MILESTONES.map(m=>`<span><b>${m[2]}</b> ${m[3]}</span>`).join("");
+}
+
+function rowsFor(){
+  const out=[]; const sortf=(a,b)=>a.start-b.start||a.end-b.end||a.id.localeCompare(b.id);
+  if(mode==="story"){
+    GROUPS.forEach(([k,name,ref])=>{const ts=TASKS.filter(t=>t.group===k).sort(sortf);
+      out.push({g:true,name,meta:ref==="shared"?ts.length+" tasks":ref+" · "+ts.length+" tasks · "+fmtH(ts.reduce((s,t)=>s+t.hours,0))});
+      ts.forEach(t=>out.push({t}));});
+  }else{
+    Object.keys(OWNERS).forEach(o=>{const ts=TASKS.filter(t=>t.owner===o).sort(sortf);
+      out.push({g:true,name:o,meta:OWNERS[o]+" · "+ts.length+" tasks · "+fmtH(ts.reduce((s,t)=>s+t.hours,0))});
+      ts.forEach(t=>out.push({t}));});
+  }
+  return out;
+}
+
+const dayX=d=>`calc(var(--lw) + (100% - var(--lw)) * ${(d-DAY0+0.5)/NDAYS})`;
+function build(){
+  const g=$("#grid"); let h="";
+  h+=`<div class="row head"><div class="lab">Task</div><div class="tl">`;
+  for(let i=0;i<NDAYS;i++){const d=DAY0+i; h+=`<div class="cell dh ${d===todayN?"today":""} ${isWE(d)?"we":""}"><span>${WD[dow(d)]}</span><b>${d}</b></div>`;}
+  h+=`</div></div>`;
+  h+=`<div class="row ms"><div class="lab">Key dates</div><div class="tl">${cells()}${MILESTONES.map(m=>`<button class="msm ${selMs===m[0]?"sel":""}" data-d="${m[0]}" style="left:${(m[0]-DAY0+0.5)/NDAYS*100}%" title="${m[2]}: ${m[3]}" aria-label="${m[2]}: ${m[3]}"><i></i>${m[1]}</button>`).join("")}</div></div>`;
+  rowsFor().forEach(r=>{
+    if(r.g){h+=`<div class="row grp"><div class="lab" title="${r.name}"><span class="gn">${r.name}</span></div><div class="tl">${cells()}<span class="gm">${r.meta}</span></div></div>`;}
+    else{const t=r.t, dn=done.has(t.id), lt=isLate(t);
+      const tag=dn?`<span class="dn">✓</span>`:(lt?`<span class="lt">late</span>`:"");
+      h+=`<div class="row tr" data-id="${t.id}" style="--oc:var(--c-${t.owner})"><div class="lab"><input type="checkbox" class="mk" data-id="${t.id}" ${dn?"checked":""} ${canWrite&&syncMode!=="loading"?"":"disabled"} aria-label="${t.id} merged" title="Tick when the pull request is merged"><span class="od"></span><span class="id">${t.id}</span><span class="tt">${t.title}</span>${tag}</div><div class="tl">${cells()}<button class="bar ${t.prio==="P2"?"p2":""} ${dn?"done":""} ${lt?"late":""}" data-id="${t.id}" style="left:${(t.start-DAY0)/NDAYS*100}%;width:calc(${(t.end-t.start+1)/NDAYS*100}% - 2px);margin-left:1px" title="${t.id} ${t.title}" aria-label="${t.id} ${t.title}, ${t.owner}, ${fmtH(t.hours)}, ${win(t)}, ${t.prio==="P2"?"P2":"P1"}${dn?", merged":lt?", late":""}">${dn?"✓ ":""}${fmtH(t.hours)}${t.prio==="P1*"?"*":""}</button></div></div>`;}
+  });
+  h+=`<div class="msline" style="left:${dayX(13)}" title="Code complete"></div><div class="msline dl" style="left:${dayX(16)}" title="Deadline"></div>`;
+  g.innerHTML=h+`<svg class="deps" id="deps" aria-hidden="true"><defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs></svg>`;
+  if(todayN&&todayN>=DAY0&&todayN<DAY0+NDAYS){const c=document.createElement("div");c.className="todaycol";c.id="todaycol";g.appendChild(c);}
+  g.querySelectorAll(".bar").forEach(b=>{b.onclick=()=>{selMs=null;sel=sel===b.dataset.id?null:b.dataset.id;g.querySelectorAll(".msm").forEach(m=>m.classList.remove("sel"));paint();};});
+  g.querySelectorAll(".mk").forEach(c=>{c.onchange=()=>setMerged(c.dataset.id,c.checked);});
+  g.querySelectorAll(".msm").forEach(b=>{b.onclick=()=>{const d=+b.dataset.d; sel=null; selMs=selMs===d?null:d; g.querySelectorAll(".msm").forEach(m=>m.classList.toggle("sel",+m.dataset.d===selMs)); paint();};});
+  placeToday(); paint();
+}
+function cells(){let s="";for(let i=0;i<NDAYS;i++)s+=`<div class="cell ${isWE(DAY0+i)?"we":""}"></div>`;return s}
+function placeToday(){const c=$("#todaycol"); if(!c)return; const head=$(".row.head .tl"); const gr=$("#grid"); const lw=parseFloat(getComputedStyle(gr).getPropertyValue("--lw"));
+  const w=head.getBoundingClientRect().width/NDAYS; c.style.left=(lw+(todayN-DAY0)*w)+"px"; c.style.width=w+"px"; c.style.top="0";}
+
+function related(id){const t=byId[id]; return new Set([...t.needs,...t.soft,...(unlocks[id]||[]),...(softUnlocks[id]||[])]);}
+function paint(){
+  const rel=sel?related(sel):new Set();
+  document.querySelectorAll(".bar").forEach(b=>{const id=b.dataset.id,t=byId[id];
+    b.classList.toggle("sel",id===sel); b.classList.toggle("rel",rel.has(id));
+    b.classList.toggle("chain",$("#chainTg").checked&&chain.includes(id)&&id!==sel&&!rel.has(id));
+    b.classList.toggle("dim",!!ownerFilter&&t.owner!==ownerFilter);
+    b.setAttribute("aria-pressed",id===sel);});
+  document.querySelectorAll(".row.tr").forEach(r=>r.classList.toggle("dimrow",!!ownerFilter&&byId[r.dataset.id].owner!==ownerFilter));
+  drawDeps(); detail();
+}
+function drawDeps(){
+  const svg=$("#deps"), all=$("#allDeps").checked, ch=$("#chainTg").checked;
+  svg.querySelectorAll("path.e").forEach(p=>p.remove());
+  const origin=$("#grid").getBoundingClientRect(), lw=parseFloat(getComputedStyle($("#grid")).getPropertyValue("--lw"));
+  const pos=id=>{const b=document.querySelector('.bar[data-id="'+id+'"]'); if(!b)return null; const r=b.getBoundingClientRect(); return {l:r.left-origin.left-lw,r:r.right-origin.left-lw,y:r.top-origin.top+r.height/2};};
+  svg.setAttribute("viewBox",`0 0 ${origin.width-lw} ${origin.height}`);
+  const edge=(n,t,soft)=>{
+    const hot=sel&&((t.id===sel)||(n===sel)), onChain=!soft&&ch&&chainEdges.has(n+">"+t.id);
+    if(!(all||hot||onChain))return;
+    const a=pos(n), b=pos(t.id); if(!a||!b)return;
+    const faded=!!ownerFilter&&!hot&&t.owner!==ownerFilter&&byId[n].owner!==ownerFilter;
+    const x1=a.r, y1=a.y, x2=b.l, y2=b.y; const mx=Math.max(x1+8,Math.min(x2-8,(x1+x2)/2));
+    const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("class","e"+(onChain?" chain":"")+(hot?" hot":"")+(soft?" soft":"")+(faded?" dimp":""));
+    p.setAttribute("d",x2>=x1+10?`M${x1} ${y1} H${mx} V${y2} H${x2}`:`M${x1} ${y1} H${x1+8} V${(y1+y2)/2} H${x2-8} V${y2} H${x2}`);
+    p.setAttribute("marker-end","url(#ar)"); p.style.color=onChain?"var(--chain)":(hot?"var(--accent)":"var(--dep)"); svg.appendChild(p);};
+  TASKS.forEach(t=>{t.needs.forEach(n=>edge(n,t,false)); t.soft.forEach(n=>edge(n,t,true));});
+}
+function detail(){
+  const d=$("#detail");
+  if(selMs!==null){const m=MILESTONES.find(x=>x[0]===selMs);
+    const ending=TASKS.filter(t=>t.end===selMs), open=ending.filter(t=>!done.has(t.id));
+    d.innerHTML=`<h2>${m[2]} · ${m[1]}</h2><p class="sub" style="margin:0 0 8px">${m[3]}</p><dl><div><dt>Tasks due this day</dt><dd>${ending.length?ending.map(t=>t.id).join(", "):"none"}</dd></div><div><dt>Not merged yet</dt><dd>${open.length?open.map(t=>t.id).join(", "):"none"}</dd></div></dl>`;return;}
+  if(!sel){d.innerHTML=`<h2>Select a task or a key date</h2><p class="sub" style="margin:0">Click any bar. The task's dependencies are drawn in blue, and related bars get a blue outline. Click a diamond in the Key dates row to see what is due that day.</p>`;return;}
+  const t=byId[sel], ups=t.needs, dn=unlocks[sel]||[], sdn=softUnlocks[sel]||[];
+  const star=t.prio==="P1*"?" (contains a P2 part)":"";
+  const mi=merged.get(sel)||{};
+  if(mi.by)namesFor([mi.by]);
+  const when=mi.at?(()=>{try{return new Date(mi.at).toLocaleDateString("en-CA",{month:"short",day:"numeric"})}catch(e){return ""}})():"";
+  const status=done.has(sel)?"Merged"+(mi.by?" (ticked by "+(names[mi.by]||"…")+(when?", "+when:"")+")":(when?" ("+when+")":"")):(isLate(t)?"Late: past its end date and not merged":"Not merged yet");
+  d.innerHTML=`<h2>${t.id} · ${t.title}</h2><dl><div><dt>Owner</dt><dd>${t.owner}, ${OWNERS[t.owner]}</dd></div><div><dt>Planned</dt><dd>${fmtH(t.hours)}</dd></div><div><dt>Window</dt><dd>${win(t)}</dd></div><div><dt>Priority</dt><dd>${t.prio==="P2"?"P2":"P1"}${star}</dd></div><div><dt>Status</dt><dd>${status}</dd></div>`+
+    `<div><dt>Needs first</dt><dd>${ups.length?ups.join(", "):(WAITS[sel]?"no other task":"nothing in the plan")}</dd></div>`+
+    (SOFT[sel]?`<div><dt>Partly needs</dt><dd>${SOFT[sel].why}</dd></div>`:"")+
+    (WAITS[sel]?`<div><dt>Also waits on</dt><dd>${WAITS[sel]}</dd></div>`:"")+
+    `<div><dt>Unblocks</dt><dd>${dn.length||sdn.length?[...dn,...sdn.map(x=>x+" (part)")].join(", "):"no other task"}</dd></div></dl>`+
+    `<label class="tg"><input type="checkbox" id="doneTg" ${done.has(sel)?"checked":""} ${canWrite&&syncMode!=="loading"?"":"disabled"}> Merged (pull request is in main)</label>`;
+  $("#doneTg").onchange=e=>setMerged(sel,e.target.checked);
+}
+$("#gStory").onclick=()=>{mode="story";$("#gStory").setAttribute("aria-pressed",true);$("#gPerson").setAttribute("aria-pressed",false);build();};
+$("#gPerson").onclick=()=>{mode="person";$("#gPerson").setAttribute("aria-pressed",true);$("#gStory").setAttribute("aria-pressed",false);build();};
+$("#allDeps").onchange=paint; $("#chainTg").onchange=paint;
+addEventListener("resize",()=>{placeToday();drawDeps();});
+renderStats(); build(); connect();
+</script>
+
+</body></html>
