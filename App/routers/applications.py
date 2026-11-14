@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from App.application_statuses import APPLIED
 from App.core.dependencies import get_current_user
+from App.crud.notifications import notify_new_application  # Kaila's notification function (KA-7)
 from App.crud.jobs import get_job  # Kaila's job lookup
 from App.crud.resumes import get_resume  # Kaila's resume lookup (only finds the user's own resumes)
 from App.database.connection import get_db
@@ -58,7 +59,19 @@ def apply_for_job(
     )
     db.add(application)
     try:
-        db.commit()
+        db.flush()  # gives the application an id, without saving yet
+
+        # LA-8: tell the recruiter who posted the job (seeded jobs have no recruiter)
+        if job.recruiter_id is not None:
+            notify_new_application(
+                db,
+                recruiter_id=job.recruiter_id,
+                application_id=application.id,
+                job_title=job.title,
+                applicant_name=current_user.full_name,
+            )
+
+        db.commit()  # saves the application and the notification together
     except IntegrityError:  # two clicks at the same moment: the table's unique rule catches it
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALREADY_APPLIED)
