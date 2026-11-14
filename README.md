@@ -101,6 +101,17 @@ CORS_ORIGINS=http://localhost:5173
 
 Never commit this file. Each teammate creates their own.
 
+You can also copy `.env.example` (in the root folder) to `.env` and fill in your own values.
+
+#### AI feedback settings
+
+The AI resume feedback feature reads three optional settings from `.env`:
+
+- `AI_FEEDBACK_MODE`: `fake` (default) or `real`. Fake mode returns a canned answer and needs no key, so tests, CI and the demo work without one.
+- `AI_API_KEY`: the AI service key. Leave it empty to use fake mode. Never commit it or paste it in the team chat.
+- `AI_MODEL`: the model name used in real mode.
+
+The app uses fake mode whenever `AI_FEEDBACK_MODE` is `fake` or `AI_API_KEY` is empty. The answer shape is `ResumeFeedback` in `App/schemas/resume_feedback.py`.
 
 ### Frontend API configuration
 
