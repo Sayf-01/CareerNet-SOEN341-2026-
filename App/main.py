@@ -8,7 +8,7 @@ from App.core import config
 from App.database.base import Base
 from App.database.connection import engine
 from App.routers import auth, profile, resumes, applications, jobs, recruiter
-from App.routers import application_status, application_stats
+from App.routers import application_status, application_stats, notifications
 # TEMPORARY: creates missing tables on startup. Remove once Sayf/Kaila's Alembic migration exists.
 Base.metadata.create_all(bind=engine)
 
@@ -59,3 +59,4 @@ app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(recruiter.router, prefix="/api/v1")
 app.include_router(application_status.router, prefix="/api/v1")
 app.include_router(application_stats.router, prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api/v1")
