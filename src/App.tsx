@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import JobsPage from "./pages/JobsPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
 import RecruiterJobPage from "./pages/RecruiterJobPage";
@@ -75,6 +76,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyApplicationsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* DA-7: Notifications */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />
