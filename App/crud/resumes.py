@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session, defer
 from App.models.resumeFile import ResumeFile
-
+from App.models.application import Application
+from App.models.job import Job
 
 def _details(resume):
     # Resume info without the file itself
@@ -85,3 +86,29 @@ def delete_resume(db: Session, user_id: int, resume_id: int):
     db.delete(resume)
     db.commit()
     return True
+
+
+def get_resume_for_recruiter(
+    db: Session,
+    application_id: int,
+    recruiter_id: int,
+):
+    """Get an applicant's resume only when the recruiter owns the job."""
+
+    return (
+        db.query(ResumeFile)
+        .join(
+            Application,
+            Application.resume_id == ResumeFile.id,
+        )
+        .join(
+            Job,
+            Application.job_id == Job.id,
+        )
+        .filter(
+            Application.id == application_id,
+            Application.user_id == ResumeFile.user_id,
+            Job.recruiter_id == recruiter_id,
+        )
+        .first()
+    )
