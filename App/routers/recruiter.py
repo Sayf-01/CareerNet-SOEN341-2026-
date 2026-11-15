@@ -257,6 +257,7 @@ def get_job_applications(
             resume_id=application.resume_id,
             status=application.status,
             applied_at=application.applied_at,
+            interview_at=application.interview_at,
         )
         for application, user, profile in results
     ]
