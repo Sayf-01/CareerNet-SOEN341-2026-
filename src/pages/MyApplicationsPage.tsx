@@ -169,6 +169,12 @@ function MyApplicationsPage() {
                         <StatusBadge
                           status={application.status}
                         />
+                        {application.interview_at && (
+                          <div style={{ marginTop: "6px", fontSize: "13px" }}>
+                            Interview:{" "}
+                            {new Date(application.interview_at).toLocaleString()}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
