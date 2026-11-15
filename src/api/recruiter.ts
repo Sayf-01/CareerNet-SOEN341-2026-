@@ -38,6 +38,14 @@ export interface RecruiterApplication {
     | "Offered"
     | "Rejected";
   applied_at: string;
+  interview_at?: string | null;
+}
+
+// Optional filters for the applicant list (DA-9). Empty = no filter.
+export interface ApplicantFilters {
+  status?: string;
+  dateFrom?: string; // "YYYY-MM-DD"
+  dateTo?: string; // "YYYY-MM-DD"
 }
 
 // Create a real job posting in PostgreSQL.
@@ -52,9 +60,17 @@ export async function createJob(
 
 // Retrieve applications for a recruiter's job.
 export async function getApplicationsForJob(
-  jobId: number
+  jobId: number,
+  filters: ApplicantFilters = {}
 ): Promise<RecruiterApplication[]> {
+  // only send the filters that are actually set
+  const query = new URLSearchParams();
+  if (filters.status) query.set("status", filters.status);
+  if (filters.dateFrom) query.set("date_from", filters.dateFrom);
+  if (filters.dateTo) query.set("date_to", filters.dateTo);
+
+  const qs = query.toString();
   return apiFetch<RecruiterApplication[]>(
-    `/recruiter/jobs/${jobId}/applications`
+    `/recruiter/jobs/${jobId}/applications${qs ? `?${qs}` : ""}`
   );
 }
