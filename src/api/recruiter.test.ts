@@ -12,6 +12,9 @@ import * as client from "./client";
 import {
   getMyJobs,
   createJob,
+  updateJob,
+  archiveJob,
+  unarchiveJob,
   type CreateJobData,
   type RecruiterPosting,
   type RecruiterJob,
@@ -108,5 +111,84 @@ describe("Recruiter API - KR-6", () => {
     await expect(getMyJobs()).rejects.toThrow(
       "Unable to load job postings."
     );
+  });
+});
+
+describe("Recruiter Edit and Archive API - KR-7", () => {
+  const existingJob: RecruiterJob = {
+    id: 34,
+    title: "Software Developer",
+    company: "CareerNet Test",
+    location: "Montreal",
+    category: "Software Development",
+    description: "Develop web applications.",
+    status: "open",
+    posted_at: "2026-11-07T18:58:43Z",
+  };
+
+  it("updates only the changed job fields", async () => {
+    const changedFields = {
+      title: "Senior Software Developer",
+    };
+
+    const updatedJob: RecruiterJob = {
+      ...existingJob,
+      ...changedFields,
+    };
+
+    const apiSpy = vi
+      .spyOn(client, "apiFetch")
+      .mockResolvedValue(updatedJob);
+
+    const result = await updateJob(34, changedFields);
+
+    expect(apiSpy).toHaveBeenCalledWith(
+      "/recruiter/jobs/34",
+      {
+        method: "PATCH",
+        body: JSON.stringify(changedFields),
+      }
+    );
+
+    expect(result.title).toBe("Senior Software Developer");
+  });
+
+  it("archives an existing job", async () => {
+    const archivedJob: RecruiterJob = {
+      ...existingJob,
+      status: "archived",
+    };
+
+    const apiSpy = vi
+      .spyOn(client, "apiFetch")
+      .mockResolvedValue(archivedJob);
+
+    const result = await archiveJob(34);
+
+    expect(apiSpy).toHaveBeenCalledWith(
+      "/recruiter/jobs/34/archive",
+      {
+        method: "POST",
+      }
+    );
+
+    expect(result.status).toBe("archived");
+  });
+
+  it("unarchives a job", async () => {
+    const apiSpy = vi
+      .spyOn(client, "apiFetch")
+      .mockResolvedValue(existingJob);
+
+    const result = await unarchiveJob(34);
+
+    expect(apiSpy).toHaveBeenCalledWith(
+      "/recruiter/jobs/34/unarchive",
+      {
+        method: "POST",
+      }
+    );
+
+    expect(result.status).toBe("open");
   });
 });
