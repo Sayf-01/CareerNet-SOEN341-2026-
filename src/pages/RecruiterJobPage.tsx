@@ -7,16 +7,14 @@ import PostingForm from "../components/PostingForm";
 import Button from "../components/Button";
 
 import {
-  getApplicationsForJob,
   updateJob,
   archiveJob,
   unarchiveJob,
   type CreateJobData,
-  type RecruiterApplication,
 } from "../api/recruiter";
 
 import Alert from "../components/Alert";
-import Loader from "../components/Loader";
+import ApplicantsPanel from "../components/ApplicantsPanel";
 
 function RecruiterJobPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,14 +23,9 @@ function RecruiterJobPage() {
   const isValidJobId =
     Number.isSafeInteger(jobId) && jobId > 0;
 
-  const [applications, setApplications] = useState<
-    RecruiterApplication[]
-  >([]);
   const [job, setJob] = useState<JobDetail | null>(null);
   const [isJobLoading, setIsJobLoading] = useState(true);
   const [jobError, setJobError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
@@ -75,41 +68,6 @@ function RecruiterJobPage() {
     }
 
     void loadJob();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId, isValidJobId]);
-
-  useEffect(() => {
-    if (!isValidJobId) return;
-
-    let cancelled = false;
-
-    async function loadApplications() {
-      try {
-        const data = await getApplicationsForJob(jobId);
-
-        if (!cancelled) {
-          setApplications(data);
-          setError("");
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Unable to load applications."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadApplications();
 
     return () => {
       cancelled = true;
@@ -279,60 +237,10 @@ function RecruiterJobPage() {
           </section>
         )}
 
-        {/* DA-9 integration:
-    Replace the temporary applications list below with
-    Dany's ApplicantsPanel after DA-9 is merged.
-    Keep the existing application display until then.
-*/}
         {!isValidJobId ? (
           <Alert type="error" message="Invalid Job ID." />
-        ) : isLoading ? (
-
-          <div role="status">
-            <Loader />
-            <p>Loading applications...</p>
-          </div>
-        ) : error ? (
-          <Alert type="error" message={error} />
-        ) : applications.length === 0 ? (
-          <p>No applications yet.</p>
         ) : (
-          <section>
-            <h2>Applications ({applications.length})</h2>
-
-            <ul style={{ listStyle: "none", padding: 0 }}>
-              {applications.map((application) => (
-                <li
-                  key={application.application_id}
-                  style={{
-                    border: "1px solid #d0d7de",
-                    borderRadius: "8px",
-                    padding: "16px",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <h3>{application.applicant_name}</h3>
-
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    {application.status}
-                  </p>
-
-                  <p>
-                    <strong>Applied:</strong>{" "}
-                    {new Date(
-                      application.applied_at
-                    ).toLocaleDateString()}
-                  </p>
-
-                  <p>
-                    <strong>Resume ID:</strong>{" "}
-                    {application.resume_id ?? "None"}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <ApplicantsPanel jobId={jobId} />
         )}
       </section>
     </main>
