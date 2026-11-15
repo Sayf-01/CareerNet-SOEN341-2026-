@@ -15,4 +15,6 @@ export interface MyApplication {
   status: ApplicationStatus;
   applied_at: string;
   updated_at: string;
+  // set by the recruiter when the status is Interview (YO-7)
+  interview_at?: string | null;
 }

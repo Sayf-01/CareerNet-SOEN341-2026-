@@ -29,13 +29,13 @@ class CreateJobRequest(BaseModel):
             raise ValueError("Field cannot be empty")
         return value
 
-
 class ReceivedApplication(BaseModel):
     application_id: int
     applicant_name: str
     resume_id: int | None
     status: str
     applied_at: datetime
+    interview_at: datetime | None = None
 
 class RecruiterJobListItem(BaseModel):
     id: int
