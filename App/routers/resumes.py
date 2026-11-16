@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from sqlalchemy.orm import Session
 
 from App.core.dependencies import get_current_user
-from App.crud import resumes as resume_crud  # Kaila's resume functions
+from App.core.rate_limit import feedback_limiter
+from App.crud import resumes as resume_crud  
 from App.database.connection import get_db
 from App.models.user import User
-from App.resume_rules import ALLOWED_RESUME_TYPES, MAX_RESUME_BYTES  # Kaila's limits file
+from App.resume_rules import ALLOWED_RESUME_TYPES, MAX_RESUME_BYTES  
 from App.schemas.resume import ResumeOut
 from App.schemas.resume_feedback import ResumeFeedback  
 from App.services.ai_feedback import AIUnavailableError, generate_resume_feedback  
@@ -101,6 +102,7 @@ def delete_resume(
 
 UNREADABLE = "We could not read text from this file."
 AI_UNAVAILABLE = "AI feedback is temporarily unavailable."
+RATE_LIMITED = "You asked for feedback several times. Please try again later."
 
 
 @router.post("/{resume_id}/feedback", response_model=ResumeFeedback)
@@ -110,6 +112,9 @@ def resume_feedback(
     db: Session = Depends(get_db),
 ):
     """AI feedback on one of my resumes. Nothing is saved, and the resume text is never logged or returned."""
+    # 0. At most 5 feedback requests per user per hour
+    if not feedback_limiter.allow(current_user.id):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=RATE_LIMITED)
     # 1. The resume must be mine (someone else's or a missing one gives 404)
     resume = resume_crud.get_resume(db, current_user.id, resume_id)
     if resume is None:
