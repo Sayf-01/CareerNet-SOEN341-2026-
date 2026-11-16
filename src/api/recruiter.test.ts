@@ -15,6 +15,8 @@ import {
   updateJob,
   archiveJob,
   unarchiveJob,
+  updateApplicationStatus,
+  downloadApplicantResume,
   type CreateJobData,
   type RecruiterPosting,
   type RecruiterJob,
@@ -190,5 +192,97 @@ describe("Recruiter Edit and Archive API - KR-7", () => {
     );
 
     expect(result.status).toBe("open");
+  });
+});
+
+
+describe("Applicant Status and Resume API - KR-9", () => {
+  it("sends the interview status with an ISO date", async () => {
+    const interviewAt = "2026-11-20T15:30:00.000Z";
+
+    const updated = {
+      id: 101,
+      status: "Interview",
+      interview_at: interviewAt,
+      updated_at: "2026-11-16T10:00:00Z",
+    };
+
+    const apiSpy = vi
+      .spyOn(client, "apiFetch")
+      .mockResolvedValue(updated);
+
+    const result = await updateApplicationStatus(
+      101,
+      "Interview",
+      interviewAt
+    );
+
+    expect(apiSpy).toHaveBeenCalledWith(
+      "/applications/101/status",
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "Interview",
+          interview_at: interviewAt,
+        }),
+      }
+    );
+
+    expect(result.status).toBe("Interview");
+    expect(result.interview_at).toBe(interviewAt);
+  });
+
+  it("does not send an interview date for other statuses", async () => {
+    const apiSpy = vi
+      .spyOn(client, "apiFetch")
+      .mockResolvedValue({
+        id: 101,
+        status: "Under Review",
+        interview_at: null,
+        updated_at: "2026-11-16T10:00:00Z",
+      });
+
+    await updateApplicationStatus(101, "Under Review");
+
+    expect(apiSpy).toHaveBeenCalledWith(
+      "/applications/101/status",
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "Under Review",
+        }),
+      }
+    );
+  });
+
+  it("downloads an applicant resume as a Blob", async () => {
+    const resumeBlob = new Blob(["Sample resume"], {
+      type: "application/pdf",
+    });
+
+    const apiSpy = vi
+      .spyOn(client, "apiFetch")
+      .mockResolvedValue(resumeBlob);
+
+    const result = await downloadApplicantResume(101);
+
+    expect(apiSpy).toHaveBeenCalledWith(
+      "/applications/101/resume"
+    );
+
+    expect(result).toBe(resumeBlob);
+  });
+
+  it("propagates errors when a resume is unavailable", async () => {
+    vi.spyOn(client, "apiFetch").mockRejectedValue(
+      new client.ApiError("Resume not found.", 404)
+    );
+
+    await expect(
+      downloadApplicantResume(101)
+    ).rejects.toMatchObject({
+      status: 404,
+      message: "Resume not found.",
+    });
   });
 });
