@@ -1,6 +1,6 @@
 
 import { apiFetch } from "./client";
-
+import type { ApplicationStatus } from "../types/application";
 
 
 // Information entered in the job posting form.
@@ -133,5 +133,47 @@ export async function unarchiveJob(
     {
       method: "POST",
     }
+  );
+}
+
+// Response returned after updating an application's status.
+export interface ApplicationStatusUpdate {
+  id: number;
+  status: ApplicationStatus;
+  interview_at: string | null;
+  updated_at: string;
+}
+
+/**
+ * Update an applicant's status and optionally schedule an interview.
+ * The interview date must be an ISO date-time string.
+ */
+export async function updateApplicationStatus(
+  applicationId: number,
+  status: ApplicationStatus,
+  interviewAt?: string
+): Promise<ApplicationStatusUpdate> {
+  return apiFetch<ApplicationStatusUpdate>(
+    `/applications/${applicationId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        status,
+        ...(interviewAt ? { interview_at: interviewAt } : {}),
+      }),
+    }
+  );
+}
+
+
+/**
+ * Download the resume attached to a recruiter's application.
+ * The shared API helper includes the logged-in user's token.
+ */
+export async function downloadApplicantResume(
+  applicationId: number
+): Promise<Blob> {
+  return apiFetch<Blob>(
+    `/applications/${applicationId}/resume`
   );
 }
