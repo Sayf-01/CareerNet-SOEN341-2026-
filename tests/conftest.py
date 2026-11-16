@@ -63,3 +63,10 @@ def auth_headers(client, registered_user):
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture(autouse=True)
+def reset_feedback_limit():
+    # every test starts with fresh AI feedback counts, so one test can't use up another's limit
+    from App.core.rate_limit import feedback_limiter
+    feedback_limiter.reset()
+    yield

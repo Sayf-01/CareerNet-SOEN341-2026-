@@ -1,4 +1,5 @@
-
+import FeedbackPanel from "./FeedbackPanel";
+import type { ResumeFeedback } from "../types/feedback";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
 import Button from "./Button";
@@ -12,6 +13,7 @@ import {
   replaceResume,
   deleteResume,
   downloadResume,
+  getResumeFeedback,
 } from "../api/resumes";
 
 import {
@@ -38,6 +40,15 @@ function ResumeSection() {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [feedbackResumeId, setFeedbackResumeId] =
+    useState<number | null>(null);
+
+  const [feedback, setFeedback] =
+    useState<ResumeFeedback | null>(null);
+
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] =
+    useState<string | null>(null);
 
   const [replaceId, setReplaceId] = useState<number | null>(null);
 
@@ -213,6 +224,28 @@ function ResumeSection() {
     }
   };
 
+  const handleFeedback = async (id: number) => {
+    const confirmed = window.confirm(
+      "Your resume text will be sent to an AI service to create feedback. Do not continue if your resume contains information you do not want to share. Continue?"
+    );
+
+    if (!confirmed) return;
+
+    setFeedbackResumeId(id);
+    setFeedback(null);
+    setFeedbackError(null);
+    setFeedbackLoading(true);
+
+    try {
+      const result = await getResumeFeedback(id);
+      setFeedback(result);
+    } catch (err) {
+      setFeedbackError(getErrorMessage(err));
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
   return (
     <section
       aria-labelledby="resumes-heading"
@@ -234,7 +267,7 @@ function ResumeSection() {
         type="file"
         accept={RESUME_ACCEPT}
         onChange={handleUpload}
-        disabled={isBusy}
+        disabled={isBusy || feedbackLoading}
         aria-label="Choose resume to upload"
         style={{ display: "none" }}
       />
@@ -245,7 +278,7 @@ function ResumeSection() {
         type="file"
         accept={RESUME_ACCEPT}
         onChange={handleReplace}
-        disabled={isBusy}
+        disabled={isBusy || feedbackLoading}
         aria-label="Choose replacement resume"
         style={{ display: "none" }}
       />
@@ -253,7 +286,7 @@ function ResumeSection() {
       <div style={{ margin: "1rem 0" }}>
         <Button
           type="button"
-          disabled={isBusy || isLoading}
+          disabled={isBusy || isLoading || feedbackLoading}
           onClick={() => uploadInputRef.current?.click()}
         >
           Upload Resume
@@ -301,7 +334,7 @@ function ResumeSection() {
                 <Button
                   type="button"
                   style={{ width: "auto" }}
-                  disabled={isBusy}
+                  disabled={isBusy || feedbackLoading}
                   onClick={() => handleDownload(resume)}
                 >
                   Download
@@ -310,7 +343,17 @@ function ResumeSection() {
                 <Button
                   type="button"
                   style={{ width: "auto" }}
-                  disabled={isBusy}
+                  disabled={isBusy || feedbackLoading}
+                  onClick={() => void handleFeedback(resume.id)}
+                >
+                  Get AI feedback
+                </Button>
+
+
+                <Button
+                  type="button"
+                  style={{ width: "auto" }}
+                  disabled={isBusy || feedbackLoading}
                   onClick={() => chooseReplacement(resume.id)}
                 >
                   Replace
@@ -320,15 +363,24 @@ function ResumeSection() {
                   type="button"
                   style={{
                     width: "auto",
-                    color:"white",
+                    color: "white",
                     backgroundColor: "#b42318",
                   }}
-                  disabled={isBusy}
+                  disabled={isBusy || feedbackLoading}
                   onClick={() => handleDelete(resume.id)}
                 >
                   Delete
                 </Button>
               </div>
+
+              {feedbackResumeId === resume.id && (
+                <FeedbackPanel
+                  feedback={feedback}
+                  loading={feedbackLoading}
+                  error={feedbackError}
+                />
+              )}
+
             </li>
           ))}
         </ul>

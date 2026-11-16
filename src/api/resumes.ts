@@ -1,6 +1,7 @@
 
 import { apiFetch } from "./client";
 import type { Resume } from "../types/resume";
+import type { ResumeFeedback } from "../types/feedback";
 import { validateResumeFile } from "../constants/resumeRules";
 
 // Get resumes belonging to the logged-in user.
@@ -61,4 +62,20 @@ export async function downloadResume(
   id: number
 ): Promise<Blob> {
   return apiFetch<Blob>(`/resumes/${id}/download`);
+}
+
+
+/**
+ * Request AI feedback for one of the logged-in user's resumes.
+ * The backend returns structured feedback without storing it.
+ */
+export async function getResumeFeedback(
+  id: number
+): Promise<ResumeFeedback> {
+  return apiFetch<ResumeFeedback>(
+    `/resumes/${id}/feedback`,
+    {
+      method: "POST",
+    }
+  );
 }
