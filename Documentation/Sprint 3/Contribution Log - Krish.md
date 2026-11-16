@@ -266,7 +266,7 @@ Used ChatGPT for guidance on the posting edit/archive API functions, reusing Pos
 **Date:** November 2026  
 **Time Spent:** 2 Hours  
 **Priority:** P1 (Resume viewing: P2)  
-**Status:** Frontend implementation completed, PR #200 open, awaiting team review
+**Status:** Frontend implementation completed, PR #200 merged into main
 
 ### Work Completed
 
@@ -343,7 +343,7 @@ Used ChatGPT for guidance on the posting edit/archive API functions, reusing Pos
 **KR-9 Pull Request:** https://github.com/Sayf-01/CareerNet-SOEN341-2026-/pull/200  
 **Branch:** feature/KR-9-status-interview  
 **Commit:** 0a83488  
-**Pull Request Status:** Open, awaiting review from Sayf and Dany. Both CI checks passed.
+**Pull Request Status:** Merged into main. Both CI checks passed.
 
 ### AI Assistance
 
@@ -358,7 +358,7 @@ I reviewed the suggested changes and verified the implementation through 87 pass
 **Date:** November 16, 2026  
 **Time Spent:** 2.5 Hours  
 **Priority:** P1  
-**Status:** Frontend implementation completed, PR #201 open, awaiting team review
+**Status:** Frontend implementation completed, PR #201 merged into main
 
 ### Work Completed
 
@@ -440,11 +440,13 @@ I reviewed the suggested changes and verified the implementation through 87 pass
 **KR-11 Pull Request:** https://github.com/Sayf-01/CareerNet-SOEN341-2026-/pull/201  
 **Branch:** feature/KR-11-ai-feedback-button  
 **Commit:** 3ea7141  
-**Pull Request Status:** Open, awaiting review from Sayf and Dany. Both CI checks passed.  
-**Backend Dependency:** LA-10 - AI Resume Feedback Endpoint.
+**Pull Request Status:** Merged into main. Both CI checks passed.
+**Backend Dependency:** LA-10 - AI Resume Feedback Endpoint merged into main.
 
 ### AI Assistance
 
 Used ChatGPT for step-by-step implementation guidance, authenticated API integration, privacy confirmation handling, React state management, FeedbackPanel integration, unit test creation, error handling, and Git workflow instructions.
 
 I reviewed the changes and verified them through 82 passing frontend tests, ESLint, the production build, Git whitespace validation, and GitHub CI. The frontend implementation is ready for review, with final live feedback testing pending backend integration.
+
+The frontend implementation has been merged into main. 

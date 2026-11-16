@@ -368,7 +368,7 @@ I also completed the optional resume viewing feature and included error handling
 
 **Commit:** 0a83488\
 **Final PR:** https://github.com/Sayf-01/CareerNet-SOEN341-2026-/pull/200\
-**PR Status:** Open, awaiting team review. Both CI checks passed.\
+**PR Status:** Merged into main. Both CI checks passed.\
 **Backend Integration:** Final live testing pending.
 
 ---
@@ -459,5 +459,5 @@ I verified the functionality through automated tests and confirmed that ESLint a
 
 **Commit:** 3ea7141\
 **Final PR:** https://github.com/Sayf-01/CareerNet-SOEN341-2026-/pull/201\
-**PR Status:** Open, awaiting team review. Both CI checks passed.\
-**Backend Dependency:** LA-10 - AI Resume Feedback Endpoint, final integration testing pending.
+**PR Status:** Merged into main. Both CI checks passed.\
+**Backend Dependency:** LA-10 - AI Resume Feedback Endpoint merged into main. Final live integration testing pending.
