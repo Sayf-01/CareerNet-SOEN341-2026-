@@ -7,6 +7,9 @@ from App.database.connection import get_db
 from App.models.user import User
 from App.resume_rules import ALLOWED_RESUME_TYPES, MAX_RESUME_BYTES  # Kaila's limits file
 from App.schemas.resume import ResumeOut
+from App.schemas.resume_feedback import ResumeFeedback  
+from App.services.ai_feedback import AIUnavailableError, generate_resume_feedback  
+from App.services.resume_text import ResumeTextError, extract_resume_text  
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
@@ -93,3 +96,34 @@ def delete_resume(
     """Delete one of my resumes."""
     if not resume_crud.delete_resume(db, current_user.id, resume_id):
         raise NOT_FOUND
+
+# ---------- LA-10: AI feedback on one of my resumes ----------
+
+UNREADABLE = "We could not read text from this file."
+AI_UNAVAILABLE = "AI feedback is temporarily unavailable."
+
+
+@router.post("/{resume_id}/feedback", response_model=ResumeFeedback)
+def resume_feedback(
+    resume_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """AI feedback on one of my resumes. Nothing is saved, and the resume text is never logged or returned."""
+    # 1. The resume must be mine (someone else's or a missing one gives 404)
+    resume = resume_crud.get_resume(db, current_user.id, resume_id)
+    if resume is None:
+        raise NOT_FOUND
+
+    # 2. Turn the file into text (Kaila, KA-12)
+    try:
+        text = extract_resume_text(resume.content_type, resume.file_data)
+    except ResumeTextError:
+        # our own message only: the error's message is not shown
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=UNREADABLE) from None
+
+    # 3. Ask for feedback (Youssef, YO-10): fake answer by default, real AI when configured
+    try:
+        return generate_resume_feedback(text)
+    except AIUnavailableError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=AI_UNAVAILABLE) from None
