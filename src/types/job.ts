@@ -12,9 +12,8 @@ export interface Job {
 // Represents the complete information for one job.
 export interface JobDetail extends Job {
   description: string;
-  status: "open" | "closed";
+  status: "open" | "closed" | "archived";
 }
-
 // Represents the response returned by the job listing API.
 export interface JobListResponse {
   items: Job[];
