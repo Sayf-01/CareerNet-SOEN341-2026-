@@ -314,5 +314,18 @@ describe("Recruiter Manage Posting - KR-7", () => {
         ).toBeTruthy();
     });
 
+    it("shows the DA-9 applicants panel for a valid job id", async () => {
+        renderPage();
 
+        expect(
+            await screen.findByRole("heading", { name: "Applicants" })
+        ).toBeTruthy();
+
+        // the panel loads this posting's applicants with no filters set
+        expect(mockGetApplications).toHaveBeenCalledWith(34, {
+            status: "",
+            dateFrom: "",
+            dateTo: "",
+        });
+    });
 });
