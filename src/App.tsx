@@ -14,8 +14,10 @@ import ProfilePage from "./pages/ProfilePage";
 import JobsPage from "./pages/JobsPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
+import RecruiterJobPage from "./pages/RecruiterJobPage";
 
 function App() {
   return (
@@ -78,6 +80,16 @@ function App() {
             }
           />
 
+          {/* DA-7: Notifications */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* KR-4: Recruiter Dashboard */}
           <Route
             path="/recruiter"
@@ -87,6 +99,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+  path="/recruiter/jobs/:id"
+  element={
+    <ProtectedRoute requiredRole="RECRUITER">
+      <RecruiterJobPage />
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
