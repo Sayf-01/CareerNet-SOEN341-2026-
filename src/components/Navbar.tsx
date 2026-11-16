@@ -1,6 +1,7 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import NotificationBell from "./NotificationBell";
 
 const linkStyle = {
   color: "#ffffff",
@@ -78,6 +79,9 @@ function Navbar() {
                 Recruiter Dashboard
               </Link>
             )}
+
+            {/* DA-7: notification bell */}
+            <NotificationBell />
 
             <button
               type="button"
