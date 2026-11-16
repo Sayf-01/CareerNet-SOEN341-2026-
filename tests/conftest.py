@@ -1,5 +1,10 @@
 import os
 
+# Force fake AI settings in the test process before the app loads so the suite does not
+# depend on a developer's local .env file or a real API key.
+os.environ["AI_FEEDBACK_MODE"] = "fake"
+os.environ["AI_API_KEY"] = ""
+
 # Use a throwaway in-memory database for tests. Must be set BEFORE importing the app.
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-unit-tests-123456"
