@@ -1,7 +1,3 @@
-﻿# KA-14: picks the jobs the AI job matching can recommend, and scores them with keywords.
-# The keyword score is also the fallback when the AI is off or gives a bad answer.
-# Only profile skills, headline and location are used, never name, email or phone.
-
 import re
 
 from sqlalchemy import exists
