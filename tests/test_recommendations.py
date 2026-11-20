@@ -262,3 +262,44 @@ def test_other_users_data_not_included(client):
         assert "user_id" not in item
         assert "email" not in item
         assert "phone" not in item
+
+
+
+def test_resume_text_is_used_when_the_user_has_a_resume(client):
+    """With a readable resume uploaded, the answer says the resume was used."""
+    from tests.resume_samples import SAMPLE_RESUME_TEXT, make_pdf_bytes
+
+    headers = _register_and_login(client, "withresume@example.com")
+    db = _new_session()
+    uid = _get_user_id(db, "withresume@example.com")
+    _add_profile(db, uid)
+    _make_job(db)
+    client.post(
+        f"{API}/resumes",
+        files={"file": ("cv.pdf", make_pdf_bytes(SAMPLE_RESUME_TEXT), "application/pdf")},
+        headers=headers,
+    )
+
+    r = get_recs(client, headers)
+
+    assert r.status_code == 200
+    assert r.json()["resume_used"] is True
+
+
+def test_unreadable_resume_does_not_block_recommendations(client):
+    """A resume whose text cannot be read is skipped, not an error."""
+    headers = _register_and_login(client, "scan@example.com")
+    db = _new_session()
+    uid = _get_user_id(db, "scan@example.com")
+    _add_profile(db, uid)
+    _make_job(db)
+    client.post(
+        f"{API}/resumes",
+        files={"file": ("cv.doc", b"old word file", "application/msword")},
+        headers=headers,
+    )
+
+    r = get_recs(client, headers)
+
+    assert r.status_code == 200
+    assert r.json()["resume_used"] is False
