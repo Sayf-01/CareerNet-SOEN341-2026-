@@ -1,0 +1,8 @@
+[run]
+source = App
+omit =
+    */__pycache__/*
+
+[report]
+show_missing = True
+skip_empty = True

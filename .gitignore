@@ -29,3 +29,9 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Coverage reports
+coverage/
+.coverage
+coverage.xml
+htmlcov/

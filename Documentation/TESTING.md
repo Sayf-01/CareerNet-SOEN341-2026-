@@ -46,6 +46,23 @@ Put the mock in the component test before rendering the component. The
 that function too when the test exercises job creation. Wrap pages that use
 application context in the same provider used by the app.
 
+## Test coverage
+
+CI runs both test suites with coverage on every pull request and every push to
+`main`, and shows a summary on the run page. The full reports are attached to
+the run as the `backend-coverage` and `frontend-coverage` artifacts.
+
+Run the same commands locally:
+
+```sh
+pytest --cov=App --cov-report=term-missing   # backend: lines not tested are listed
+npm run test:coverage                        # frontend: table per file
+```
+
+Backend coverage covers the `App/` folder. Frontend coverage covers `src/`,
+without test files and `src/main.tsx`. Use the "Missing" lines (backend) and the
+per-file table (frontend) to find gaps and write tests for them.
+
 ## Pull requests
 
 Every pull request must include tests for its changes. Keep tests isolated from
