@@ -21,7 +21,7 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: pip install -r requirements.txt
       - name: Run tests with coverage
-        run: pytest --cov=App --cov-report=term-missing --cov-report=xml --cov-report=html
+        run: pytest --cov --cov-report=term-missing --cov-report=xml --cov-report=html
       - name: Coverage summary
         if: always()
         run: |
@@ -60,3 +60,34 @@ jobs:
           path: coverage/
       - run: npm run lint
       - run: npm run build
+
+  sonarcloud:
+    name: SonarCloud analysis
+    needs: [backend, frontend]
+    # Secretless login needs GitHub's OIDC token, which pull requests from forks do not get.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # lets the job ask GitHub for a short-lived identity token
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # SonarCloud needs full history to blame and detect new code
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage
+      - uses: SonarSource/sonarqube-auth-action@v1
+        id: auth
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v8
+        with:
+          args: >
+            -Dsonar.organization=${{ steps.auth.outputs.organization }}
+            -Dsonar.projectKey=${{ steps.auth.outputs.project-key }}
