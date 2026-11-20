@@ -1,0 +1,181 @@
+AI Usage Log Entry 1
+
+Task ID/Title: Research Frontend Project Setup and Directory Structure
+
+Purpose of AI Use:
+
+Research and development environment setup. AI was used to find useful YouTube tutorials and documentation resources for setting up a frontend project using React, TypeScript, Vite, and Axios. The goal was also to understand how to organize the src/ directory in a clean and maintainable way for the CareerNet frontend.
+
+Chat Link or Prompt/Response:
+
+Prompt:
+
+"I am starting Sprint 1 for a React, TypeScript, Vite, and Axios frontend project called CareerNet. Can you suggest a couple of good YouTube tutorials or documentation guides that walk through setting up this stack and structuring the src/ directory cleanly?"
+
+AI Response:
+
+The AI provided recommendations for tutorials and documentation related to setting up a React project with TypeScript and Vite, using Axios for API requests, and organizing the frontend src/ directory. The suggestions focused on understanding the purpose of common folders and files and keeping the project structure organized as the application grows.
+
+AI-Suggested Content:
+
+The AI suggested learning resources covering:
+
+• Setting up a React + TypeScript project using Vite.
+• Installing and using Axios for communication with a backend API.
+• Organizing the src/ directory into logical sections.
+• Separating components, pages, services/API-related code, and other reusable frontend code.
+• Following a clean project structure that can be maintained as more features are added.
+
+Validation:
+
+The suggested resources were reviewed to determine whether they were relevant to the technologies being used in the project. The team compared the suggested project structure with the requirements and planned frontend features for CareerNet. The suggestions were treated as references rather than being adopted automatically. The team made the final decision about which structure and resources were appropriate for the project.
+
+Decision:
+
+Modified before use. The AI suggestions were used as references for setting up and organizing the frontend, but the team selected and adapted the structure based on the project's requirements and development needs.
+
+Reflection:
+
+The AI assistance was useful for quickly finding relevant learning resources and understanding common ways to organize a React and TypeScript project. It helped provide a starting point for the frontend structure without requiring the team to design everything from scratch. However, the suggestions still needed to be reviewed to make sure they matched the technologies and organization needed for our specific project.
+
+Responsible Person:
+
+Krish Patel
+
+AI Usage Log Entry 2
+
+Task ID/Title: Push Local Feature Branch to GitHub
+
+Purpose of AI Use:
+
+Debugging and problem solving. AI was used to understand and resolve a Git error that occurred when trying to push a newly created local branch to GitHub. The purpose was to determine the correct command for setting the remote upstream branch.
+
+Chat Link or Prompt/Response:
+
+Prompt:
+
+"I created a local branch feature/registration-ui and tried to push it to GitHub, but git gave me an error saying 'the current branch has no upstream branch'. What command should I run in VS Code terminal?"
+
+AI Response:
+
+The AI explained that the local branch did not yet have a corresponding upstream branch on the remote repository. It suggested using the following command:
+
+git push -u origin feature/registration-ui
+
+The -u option sets the GitHub branch as the upstream branch for the current local branch. After the upstream is configured, future pushes can normally be performed using git push.
+
+AI-Suggested Content:
+
+The AI suggested using:
+
+git push -u origin feature/registration-ui
+
+This command pushes the local feature/registration-ui branch to the origin remote and establishes the remote branch as its upstream branch.
+
+Validation:
+
+The command was tested in the VS Code terminal. The push was checked to confirm that the local branch was successfully uploaded to the GitHub repository. The GitHub repository was also checked to verify that the feature/registration-ui branch was created and available remotely.
+
+Decision:
+
+Accepted. The suggested command resolved the upstream branch issue and was used to push the feature branch to GitHub.
+
+Reflection:
+
+The AI assistance was useful because it provided a direct solution to the Git error and explained why the error occurred. This helped me understand the difference between a local branch and its remote upstream branch instead of only copying the command without understanding the problem.
+
+Responsible Person:
+
+Krish Patel
+
+AI Usage Log Entry 3
+
+Task ID/Title: Prepare Pull Request Summary and Team Notification
+
+Purpose of AI Use:
+
+Documentation and team communication. AI was used to help draft a concise GitHub Pull Request (PR) summary and a short Discord message to inform the team that the registration feature tasks had been completed and were ready for review.
+
+Chat Link or Prompt/Response:
+
+Prompt:
+
+"I just finished tasks for my registration feature. Can you help me draft a concise GitHub Pull Request summary and a short, friendly Discord message to notify my team that my tasks are done and ready for review?"
+
+AI Response:
+
+The AI suggested a concise Pull Request summary describing the completion of the registration-related tasks and requesting team members to review the changes. It also suggested a short and friendly Discord message informing the team that the work was completed and the Pull Request was ready for review.
+
+AI-Suggested Content:
+
+The AI generated:
+
+• A short GitHub Pull Request summary explaining that the registration feature tasks had been completed.
+• A friendly Discord message notifying the team that the work was ready for review.
+• Clear wording that communicated the completion status without unnecessary technical details.
+
+Validation:
+
+The generated messages were manually reviewed to make sure they accurately represented the work that had actually been completed. The Pull Request summary was compared with the changes included in the branch, and the Discord message was reviewed before being shared with the team.
+
+Decision:
+
+Modified before use. The AI-generated wording was used as a starting point and adjusted to accurately describe the completed registration tasks and match the team's communication style.
+
+Reflection:
+
+The AI assistance was useful for quickly creating clear and concise communication for the team's GitHub and Discord workflow. It helped save time when writing the PR description and team notification. However, the generated content still needed to be checked and modified so that it accurately reflected the actual work completed.
+
+Responsible Person:
+
+Krish Patel
+
+AI Usage Log Entry 4
+
+Task ID/Title: Coordinate Sequential Pull Request Merging
+
+Purpose of AI Use:
+
+Project planning and Git workflow guidance. AI was used to determine an appropriate step-by-step Git workflow for reviewing and merging two team members' feature branches into the main branch sequentially. The goal was to coordinate the Registration UI and Login UI Pull Requests while reducing the risk of merge conflicts.
+
+Chat Link or Prompt/Response:
+
+Prompt:
+
+"My team member Dany and I both have open PRs (Registration UI and Login UI) targeting main. What is the best step-by-step Git workflow for us to review and merge our branches into main sequentially without causing merge conflicts?"
+
+AI Response:
+
+The AI recommended coordinating the Pull Requests and merging them sequentially rather than merging both at the same time. The suggested workflow included reviewing the first Pull Request, merging it into main, updating the second feature branch with the latest changes from main, resolving and testing any conflicts if they occurred, and then reviewing and merging the second Pull Request.
+
+The AI also explained that keeping feature branches synchronized with main and communicating with the other team member can reduce the likelihood of conflicts.
+
+AI-Suggested Content:
+
+The AI suggested the following general workflow:
+
+1. Decide which Pull Request will be reviewed and merged first.
+2. Review the first Pull Request and check that its changes are ready.
+3. Merge the first Pull Request into main.
+4. Update the second feature branch with the latest version of main.
+5. Resolve any merge conflicts if they occur.
+6. Test the updated second branch to make sure the changes still work.
+7. Request/review the second Pull Request.
+8. Merge the second Pull Request into main after approval and successful checks.
+9. Communicate with the team throughout the process to avoid both members making conflicting changes at the same time.
+
+Validation:
+
+The suggested workflow was reviewed against the team's GitHub branching and Pull Request process. The team also considered which branches contained overlapping changes and used GitHub Pull Requests to review the changes before merging. The workflow was applied to the Registration UI and Login UI branches, and the branches were checked after merging to make sure the project continued to build and function correctly.
+
+Decision:
+
+Modified before use. The general workflow was accepted, but the exact sequence and steps were adjusted based on the team's branch structure, Pull Request status, and review process.
+
+Reflection:
+
+The AI assistance helped clarify how two team members could coordinate Pull Requests targeting the same main branch. It reinforced the importance of reviewing and merging changes sequentially, keeping feature branches updated, and communicating with teammates. The interaction also helped us understand that conflicts cannot always be completely prevented, but they can be reduced and handled systematically.
+
+Responsible Person:
+
+Krish Patel
