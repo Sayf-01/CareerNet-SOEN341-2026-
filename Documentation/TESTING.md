@@ -55,13 +55,20 @@ the run as the `backend-coverage` and `frontend-coverage` artifacts.
 Run the same commands locally:
 
 ```sh
-pytest --cov=App --cov-report=term-missing   # backend: lines not tested are listed
+pytest --cov --cov-report=term-missing       # backend: lines not tested are listed
 npm run test:coverage                        # frontend: table per file
 ```
 
 Backend coverage covers the `App/` folder. Frontend coverage covers `src/`,
 without test files and `src/main.tsx`. Use the "Missing" lines (backend) and the
 per-file table (frontend) to find gaps and write tests for them.
+
+## Code analysis (SonarCloud)
+
+After the tests, CI sends the code and both coverage reports to SonarCloud, which
+lists bugs, vulnerabilities, security hotspots, code smells and duplication.
+Settings live in `sonar-project.properties`. Login is secretless (GitHub OIDC),
+so there is no token to store. Pull requests from forks skip this step.
 
 ## Pull requests
 

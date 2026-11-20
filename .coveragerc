@@ -1,5 +1,6 @@
 [run]
-source = App
+relative_files = True
+include = App/*
 omit =
     */__pycache__/*
 
