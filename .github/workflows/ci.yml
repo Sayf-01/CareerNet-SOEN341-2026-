@@ -83,10 +83,10 @@ jobs:
         with:
           name: frontend-coverage
           path: coverage
-      - uses: SonarSource/sonarqube-auth-action@v1
+      - uses: SonarSource/sonarqube-auth-action@a0aa643acde4162396015b4f12536c1b9c4aab82 # v1
         id: auth
       - name: SonarCloud scan
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8
         with:
           args: >
             -Dsonar.organization=${{ steps.auth.outputs.organization }}
