@@ -74,3 +74,7 @@ so there is no token to store. Pull requests from forks skip this step.
 
 Every pull request must include tests for its changes. Keep tests isolated from
 the real backend by mocking API modules or stubbing `fetch`.
+
+## Lines not covered by tests
+
+- `App/database/connection.py` line 14: changes a `postgres://` address to `postgresql://`. It only runs when the app starts with a real cloud database address, and tests always start with SQLite, so it can't run in the test suite.
