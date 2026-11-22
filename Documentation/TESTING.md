@@ -46,6 +46,36 @@ Put the mock in the component test before rendering the component. The
 that function too when the test exercises job creation. Wrap pages that use
 application context in the same provider used by the app.
 
+## What is tested
+
+Every source file with logic has tests. Files that only hold types (`frontend/src/types/`)
+need none.
+
+| Area | Where | What the tests check |
+|---|---|---|
+| Backend API | `backend/tests/test_*.py` | Every endpoint: success, wrong input (400/422), missing login (401), wrong role (403), not found (404) |
+| Backend services | `test_ai_feedback.py`, `test_ai_matching.py`, `test_edge_cases_sprint4.py` | AI answers that are valid, empty, malformed or unavailable; fake mode; database URL fix-up; the 500 handler |
+| Frontend pages | `frontend/src/pages/*.test.tsx` | Loading, empty, error and success states; form checks; redirects; paging and filters |
+| Frontend components | `frontend/src/components/*.test.tsx` | Buttons, dialogs, uploads, status badges, notifications |
+| Frontend API helpers | `frontend/src/api/*.test.ts` | Request paths and bodies, the login token header, error messages, 404 handling |
+| Login and routing | `context/AuthContext.test.tsx`, `services/authService.test.ts`, `App.test.tsx` | Saved login, logout, protected pages, recruiter-only pages |
+
+## Writing a new test
+
+Follow the pattern of the file next to yours:
+
+- Test what the user sees (`screen.getByRole`, `getByLabelText`), not internal state.
+- Mock the API module, never the real backend. Use `mockResolvedValue` for success and
+  `mockRejectedValue` for failure, and test both.
+- `<dialog>` is not implemented in jsdom. Tests that open one add small `showModal` and
+  `close` versions in `beforeAll` (see `components/ApplyDialog.test.tsx`).
+- Do not write `beforeEach(() => mock.mockReset())` on one line. The arrow function returns
+  the mock, which Vitest then calls after the test. Use braces.
+- Backend tests use an in-memory SQLite database from `tests/conftest.py`. Never point a test
+  at the shared database.
+- Each pull request needs tests for the lines it changes. SonarCloud checks that at least 80%
+  of the changed lines are covered.
+
 ## Test coverage
 
 CI runs both test suites with coverage on every pull request and every push to
@@ -77,4 +107,9 @@ the real backend by mocking API modules or stubbing `fetch`.
 
 ## Lines not covered by tests
 
-- `App/database/connection.py` line 14: changes a `postgres://` address to `postgresql://`. It only runs when the app starts with a real cloud database address, and tests always start with SQLite, so it can't run in the test suite.
+Only defensive checks that the interface cannot reach are left untested:
+
+- `frontend/src/components/ApplicantRow.tsx` (invalid interview date): the browser's date picker never returns an unreadable date.
+- `frontend/src/pages/RecruiterJobPage.tsx` ("Posting is not loaded" and the double-click guard on archive): the form and the archive button are not shown until the posting is loaded.
+
+Everything else, on the backend and the frontend, runs in the test suite.
