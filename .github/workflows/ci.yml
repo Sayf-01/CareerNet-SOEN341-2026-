@@ -26,7 +26,10 @@ jobs:
       - name: Run tests with coverage
         run: pytest --cov --cov-report=term-missing --cov-report=xml --cov-report=html
       - name: Make coverage paths relative to the repository root (for SonarCloud)
-        run: sed -i 's#filename="App/#filename="backend/App/#g' coverage.xml
+        run: |
+          sed -i 's#filename="App/#filename="backend/App/#g' coverage.xml
+          sed -i "s#<source></source>#<source>$GITHUB_WORKSPACE</source>#" coverage.xml
+          grep -m1 "<source>" coverage.xml
       - name: Coverage summary
         if: always()
         run: |
