@@ -37,3 +37,6 @@ class RateLimiter:
 
 # The one shared limiter the feedback endpoint uses
 feedback_limiter = RateLimiter()
+
+# LA-12: separate bucket for job recommendations (same 5/hour rule)
+recommendations_limiter = RateLimiter()
