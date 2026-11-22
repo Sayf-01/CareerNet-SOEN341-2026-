@@ -2,13 +2,13 @@
 
 ## Running tests
 
-Run the backend tests with:
+Run the backend tests from `backend/` with:
 
 ```sh
 pytest
 ```
 
-Run the frontend unit tests with:
+Run the frontend unit tests from `frontend/` with:
 
 ```sh
 npm test
@@ -23,9 +23,9 @@ npm run build
 
 ## Where tests live
 
-Backend tests are in the root `tests/` directory. Frontend tests live beside the
+Backend tests are in the `backend/tests/` directory. Frontend tests live beside the
 code they exercise as `*.test.ts` or `*.test.tsx`; shared Vitest setup is in
-`src/test/setup.ts`.
+`frontend/src/test/setup.ts`.
 
 ## Testing components that call the API
 
@@ -52,14 +52,14 @@ CI runs both test suites with coverage on every pull request and every push to
 `main`, and shows a summary on the run page. The full reports are attached to
 the run as the `backend-coverage` and `frontend-coverage` artifacts.
 
-Run the same commands locally:
+Run the same commands locally (backend from `backend/`, frontend from `frontend/`):
 
 ```sh
 pytest --cov --cov-report=term-missing       # backend: lines not tested are listed
 npm run test:coverage                        # frontend: table per file
 ```
 
-Backend coverage covers the `App/` folder. Frontend coverage covers `src/`,
+Backend coverage covers `backend/App/`. Frontend coverage covers `frontend/src/`,
 without test files and `src/main.tsx`. Use the "Missing" lines (backend) and the
 per-file table (frontend) to find gaps and write tests for them.
 

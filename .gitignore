@@ -35,3 +35,6 @@ coverage/
 .coverage
 coverage.xml
 htmlcov/
+
+# Local tool caches
+.lsp/
