@@ -4,6 +4,7 @@
 - **Setup tasks:** SA-21 (coverage in CI), SA-22 (SonarCloud in CI), SA-23 (this report)
 - **First scan on `main`:** Fri Nov 20 2026
 - **Dashboard:** https://sonarcloud.io/project/overview?id=Sayf-01_CareerNet-SOEN341-2026
+- **Issues list:** https://sonarcloud.io/project/issues?id=Sayf-01_CareerNet-SOEN341-2026 (each row below names the file and line; open the list and filter by file to find the issue)
 
 ## First scan totals
 
@@ -22,21 +23,21 @@ Coverage excludes tests, database migrations, scripts and config files, so it me
 
 ## Issues
 
-Add the SonarCloud link of each issue in the last column before submitting (open the issue, copy the address).
+Each issue is found in SonarCloud by its file and line (see the Issues list link above). The GitHub issue number is in the Status column.
 
-| # | File | Line | Issue | Type | Severity | Owner | Status | Fix commit | Sonar link |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | `App/routers/application_stats.py` | 67 | Unchecked input for loop condition via URL query parameter in `my_activity()` | Security | High | Lamees | Open. Likely false positive: `days` is limited to 7 to 90 by `Query(30, ge=7, le=90)`; to be confirmed by Lamees (GitHub issue #218) | | |
-| 2 | `.github/workflows/ci.yml` | 22 | `pip install` without `--only-binary :all:` can run setup scripts | Security | Medium | Sayf | Fixed in branch `fix/SA-23-analysis-ci-and-gantt` (GitHub issue #221) | `6dc5b4e` | |
-| 3 | `.github/workflows/ci.yml` | 22 | Dependencies installed without locking resolved versions | Security | Medium | Sayf | Proposed: Accepted. Every direct dependency in `requirements.txt` is pinned with `==`; only indirect dependencies can change | | |
-| 4 | `.github/workflows/ci.yml` | 47 | `npm ci` without `--ignore-scripts` | Security | Medium | Sayf | Fixed in branch `fix/SA-23-analysis-ci-and-gantt` (GitHub issue #221) | `6dc5b4e` | |
-| 5 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 1 | Missing `<title>` in the page head | Reliability | Medium | Sayf | Fixed in the same branch | `30911d2` | |
-| 6 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 1 | Missing `lang` attribute on `<html>` | Reliability | Medium | Sayf | Fixed in the same branch | `30911d2` | |
-| 7 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 266 | Prefer `Number.parseFloat` over `parseFloat` | Reliability | Medium | Sayf | Fixed in the same branch | `30911d2` | |
-| 8 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 283 | Prefer `Number.parseFloat` over `parseFloat` | Reliability | Medium | Sayf | Fixed in the same branch | `30911d2` | |
-| 9 | `src/api/client.ts` | 33 | Regular expression (`.replace(/\/+$/, "")` strips trailing slashes) with super-linear backtracking | Reliability | Medium | Krish | Open (GitHub issue #219) | | |
-| 10 | `src/pages/RegisterPage.tsx` | 28 | Regular expression with super-linear backtracking (email check) | Reliability | Medium | Krish | Open (GitHub issue #219) | | |
-| 11 | `src/pages/LoginPage.tsx` | 41 | Regular expression with super-linear backtracking (email check) | Reliability | Medium | Dany | Open (GitHub issue #220) | | |
+| # | File | Line | Issue | Type | Severity | Owner | Status | Fix commit |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `App/routers/application_stats.py` | 67 | Unchecked input for loop condition via URL query parameter in `my_activity()` | Security | High | Lamees | False positive (marked in SonarCloud on Nov 21 with reason: "Not exploitable: `days` is limited to 7-90 by `Query(30, ge=7, le=90)`; out-of-range values return 400, covered by tests/test_application_stats.py"). GitHub issue #218 | |
+| 2 | `.github/workflows/ci.yml` | 22 | `pip install` without `--only-binary :all:` can run setup scripts | Security | Medium | Sayf | Fixed and merged in PR #223 (GitHub issue #221) | `6dc5b4e` |
+| 3 | `.github/workflows/ci.yml` | 22 | Dependencies installed without locking resolved versions | Security | Medium | Sayf | Accepted (marked in SonarCloud on Nov 21, reopen: never). Every direct dependency in `requirements.txt` is pinned with `==`; only indirect dependencies can change | |
+| 4 | `.github/workflows/ci.yml` | 47 | `npm ci` without `--ignore-scripts` | Security | Medium | Sayf | Fixed and merged in PR #223 (GitHub issue #221) | `6dc5b4e` |
+| 5 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 1 | Missing `<title>` in the page head | Reliability | Medium | Sayf | Fixed and merged in PR #223 | `30911d2` |
+| 6 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 1 | Missing `lang` attribute on `<html>` | Reliability | Medium | Sayf | Fixed and merged in PR #223 | `30911d2` |
+| 7 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 266 | Prefer `Number.parseFloat` over `parseFloat` | Reliability | Medium | Sayf | Fixed and merged in PR #223 | `30911d2` |
+| 8 | `Documentation/Sprint 3/CareerNet_Sprint_3_Gantt.html` | 283 | Prefer `Number.parseFloat` over `parseFloat` | Reliability | Medium | Sayf | Fixed and merged in PR #223 | `30911d2` |
+| 9 | `src/api/client.ts` | 33 | Regular expression (`.replace(/\/+$/, "")` strips trailing slashes) with super-linear backtracking | Reliability | Medium | Krish | Open (GitHub issue #219) | |
+| 10 | `src/pages/RegisterPage.tsx` | 28 | Regular expression with super-linear backtracking (email check) | Reliability | Medium | Krish | Open (GitHub issue #219) | |
+| 11 | `src/pages/LoginPage.tsx` | 41 | Regular expression with super-linear backtracking (email check) | Reliability | Medium | Dany | Open (GitHub issue #220) | |
 
 ## Notes
 
