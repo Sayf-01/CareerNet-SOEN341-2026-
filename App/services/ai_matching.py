@@ -36,6 +36,15 @@ def _get_settings() -> dict:
     }
 
 
+def matching_mode() -> str:
+    """"ai" only when the real mode is on AND an API key is set; otherwise "fake" (keyword scoring).
+
+    The endpoint uses this too, so the mode it reports is always the one that really ran.
+    """
+    settings = _get_settings()
+    return "ai" if settings["mode"] == "real" and settings["api_key"] else "fake"
+
+
 # ---------- public entry point ----------
 
 
@@ -51,7 +60,7 @@ def match_jobs(profile_data: dict, candidate_jobs: list) -> list[dict]:
     """
     settings = _get_settings()
 
-    if settings["mode"] != "real" or not settings["api_key"]:
+    if matching_mode() == "fake":
         return _fake_match(profile_data, candidate_jobs)
 
     try:
@@ -79,7 +88,8 @@ def _fake_match(profile_data: dict, candidate_jobs: list) -> list[dict]:
     scored = []
     for job in candidate_jobs:
         score, reasons = keyword_score(p, job)
-        scored.append((score, job, reasons))
+        if score > 0:  # a job with no match has no reason to be recommended (same rule as the fallback)
+            scored.append((score, job, reasons))
 
     scored.sort(key=lambda t: t[0], reverse=True)
     scored = scored[:TOP_N]

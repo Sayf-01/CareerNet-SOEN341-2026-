@@ -265,10 +265,12 @@ def test_other_users_data_not_included(client):
 
 
 
-def test_resume_text_is_used_when_the_user_has_a_resume(client):
-    """With a readable resume uploaded, the answer says the resume was used."""
+def test_resume_text_is_used_when_the_user_has_a_resume(client, monkeypatch):
+    """In "ai" mode, with a readable resume uploaded, the answer says the resume was used."""
     from tests.resume_samples import SAMPLE_RESUME_TEXT, make_pdf_bytes
 
+    monkeypatch.setenv("AI_MATCHING_MODE", "real")
+    monkeypatch.setenv("AI_API_KEY", "test-key-not-real")
     headers = _register_and_login(client, "withresume@example.com")
     db = _new_session()
     uid = _get_user_id(db, "withresume@example.com")
@@ -280,7 +282,8 @@ def test_resume_text_is_used_when_the_user_has_a_resume(client):
         headers=headers,
     )
 
-    r = get_recs(client, headers)
+    with patch("App.routers.jobs.match_jobs", return_value=[]):
+        r = get_recs(client, headers)
 
     assert r.status_code == 200
     assert r.json()["resume_used"] is True
@@ -303,3 +306,73 @@ def test_unreadable_resume_does_not_block_recommendations(client):
 
     assert r.status_code == 200
     assert r.json()["resume_used"] is False
+
+
+def test_resume_is_not_reported_as_used_in_fake_mode(client):
+    """Keyword scoring never reads the resume, so resume_used must be false."""
+    from tests.resume_samples import SAMPLE_RESUME_TEXT, make_pdf_bytes
+
+    headers = _register_and_login(client, "fakeresume@example.com")
+    db = _new_session()
+    uid = _get_user_id(db, "fakeresume@example.com")
+    _add_profile(db, uid)
+    _make_job(db)
+    client.post(
+        f"{API}/resumes",
+        files={"file": ("cv.pdf", make_pdf_bytes(SAMPLE_RESUME_TEXT), "application/pdf")},
+        headers=headers,
+    )
+
+    r = get_recs(client, headers)
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["mode"] == "fake"
+    assert body["resume_used"] is False
+
+
+def test_mode_is_fake_when_real_mode_is_on_but_no_api_key(client, monkeypatch):
+    """Real mode without an API key runs keyword scoring, so the response must say "fake"."""
+    monkeypatch.setenv("AI_MATCHING_MODE", "real")
+    monkeypatch.setenv("AI_API_KEY", "")
+    headers = _register_and_login(client, "nokey@example.com")
+    db = _new_session()
+    uid = _get_user_id(db, "nokey@example.com")
+    _add_profile(db, uid)
+    _make_job(db)
+
+    r = get_recs(client, headers)
+    assert r.status_code == 200
+    assert r.json()["mode"] == "fake"
+
+
+def test_mode_is_ai_when_real_mode_and_api_key_are_set(client, monkeypatch):
+    """With real mode and a key the response says "ai" (the AI call itself is replaced here)."""
+    monkeypatch.setenv("AI_MATCHING_MODE", "real")
+    monkeypatch.setenv("AI_API_KEY", "test-key-not-real")
+    headers = _register_and_login(client, "withkey@example.com")
+    db = _new_session()
+    uid = _get_user_id(db, "withkey@example.com")
+    _add_profile(db, uid)
+    _make_job(db)
+
+    with patch("App.routers.jobs.match_jobs", return_value=[]):
+        r = get_recs(client, headers)
+    assert r.status_code == 200
+    assert r.json()["mode"] == "ai"
+
+
+def test_jobs_that_match_nothing_are_not_recommended(client):
+    """A job with score 0 (no skill, headline or location match) is left out, like in the fallback."""
+    headers = _register_and_login(client, "nomatch@example.com")
+    db = _new_session()
+    uid = _get_user_id(db, "nomatch@example.com")
+    _add_profile(db, uid, headline="Python Developer", skills=["Python"], location="Montreal")
+    _make_job(db, title="Baker", description="Bake bread every morning.", location="Paris")
+
+    r = get_recs(client, headers)
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["items"] == []
+    assert body["message"] == "No matching jobs found yet."

@@ -147,3 +147,12 @@ def test_unexpected_error_raises(real_mode, monkeypatch):
 
     with pytest.raises(MatchingUnavailableError):
         match_jobs(PROFILE, JOBS)
+
+
+def test_fake_mode_leaves_out_jobs_that_match_nothing(monkeypatch):
+    monkeypatch.setenv("AI_MATCHING_MODE", "fake")
+    profile = {"headline": "Python Developer", "skills": ["Python"], "location": "Montreal"}
+    nothing = SimpleNamespace(id=99, title="Baker", company="Bakery", location="Paris",
+                              category="Food", description="Bake bread.")
+
+    assert match_jobs(profile, [nothing]) == []

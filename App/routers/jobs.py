@@ -1,5 +1,3 @@
-import os
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -12,7 +10,7 @@ from App.models.resumeFile import ResumeFile
 from App.models.user import User, UserRole
 from App.schemas.job import JobListResponse, JobDetail
 from App.schemas.job_recommendation import JobRecommendation, RecommendationList
-from App.services.ai_matching import MatchingUnavailableError, match_jobs
+from App.services.ai_matching import MatchingUnavailableError, match_jobs, matching_mode
 from App.services.job_candidates import get_candidate_jobs, fallback_recommendations
 from App.services.resume_text import ResumeTextError, extract_resume_text
 
@@ -45,7 +43,9 @@ def get_recommendations(
             detail="Recruiter access required",
         )
 
-    # 2. Build the profile – fetch only public non-PII fields; never log name/email/phone
+    # 2. Build the profile from headline, summary, skills and location only (no name, email, phone
+    #    or user id fields). Note: the resume text added below is free text and can contain the
+    #    person's own contact details, because it is whatever they wrote in their resume.
     profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
     headline = (profile.headline or "").strip() if profile else ""
     skills: list[str] = (
@@ -86,7 +86,7 @@ def get_recommendations(
         "summary": (profile.summary or "") if profile else "",
         "skills": skills,
         "location": (profile.location or "") if profile else "",
-        "resume_text": resume_text,  # never the user's name, email, phone or user id
+        "resume_text": resume_text,  # free text from the resume: may include contact details
     }
 
     # 5. Get candidates and call the matching service; fall back on any error
@@ -94,7 +94,7 @@ def get_recommendations(
 
     try:
         scored = match_jobs(profile_data, candidates)
-        mode = "ai" if os.getenv("AI_MATCHING_MODE", "fake").lower() == "real" else "fake"
+        mode = matching_mode()  # what really ran: "ai" only with real mode AND an API key
     except MatchingUnavailableError:
         fallback = fallback_recommendations(db, current_user.id)
         return RecommendationList(
@@ -106,8 +106,9 @@ def get_recommendations(
 
     items = [JobRecommendation(**item) for item in scored]
     message = None if items else "No matching jobs found yet."
+    # The resume text is only read by the AI, so it counts as used only in "ai" mode
     return RecommendationList(
-        items=items, mode=mode, resume_used=resume_used, message=message
+        items=items, mode=mode, resume_used=resume_used and mode == "ai", message=message
     )
 
 
