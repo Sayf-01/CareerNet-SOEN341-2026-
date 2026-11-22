@@ -278,6 +278,7 @@ describe("KR-9 Applicant Status Controls", () => {
         TestURL.revokeObjectURL = vi.fn();
 
         vi.stubGlobal("URL", TestURL);
+        vi.useFakeTimers({ shouldAdvanceTime: true });
         renderRow();
 
         fireEvent.click(
@@ -297,6 +298,13 @@ describe("KR-9 Applicant Status Controls", () => {
             resumeBlob
         );
         expect(tab.opener).toBeNull();
+
+        // The temporary file URL is released after a minute.
+        await vi.advanceTimersByTimeAsync(60000);
+        expect(TestURL.revokeObjectURL).toHaveBeenCalledWith(
+            "blob:resume-preview"
+        );
+        vi.useRealTimers();
     });
 
     it("shows Resume not available when the API returns 404", async () => {

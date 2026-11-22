@@ -77,4 +77,9 @@ the real backend by mocking API modules or stubbing `fetch`.
 
 ## Lines not covered by tests
 
-- `App/database/connection.py` line 14: changes a `postgres://` address to `postgresql://`. It only runs when the app starts with a real cloud database address, and tests always start with SQLite, so it can't run in the test suite.
+Only defensive checks that the interface cannot reach are left untested:
+
+- `frontend/src/components/ApplicantRow.tsx` (invalid interview date): the browser's date picker never returns an unreadable date.
+- `frontend/src/pages/RecruiterJobPage.tsx` ("Posting is not loaded" and the double-click guard on archive): the form and the archive button are not shown until the posting is loaded.
+
+Everything else, on the backend and the frontend, runs in the test suite.
