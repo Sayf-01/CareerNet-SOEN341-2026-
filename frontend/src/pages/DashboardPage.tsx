@@ -6,6 +6,7 @@ import { getMyApplications } from "../api/myApplications";
 import ActivityChart from "../components/ActivityChart";
 import Alert from "../components/Alert";
 import Loader from "../components/Loader";
+import RecommendedJobs from "../components/RecommendedJobs";
 import StatusBadge from "../components/StatusBadge";
 import StatusBreakdown from "../components/StatusBreakdown";
 import { useAuth } from "../context/useAuth";
@@ -134,7 +135,10 @@ function DashboardPage() {
           Your postings and applicants are on the <Link to="/recruiter">Recruiter Dashboard</Link>.
         </p>
       ) : (
-        <JobSeekerDashboard />
+        <>
+          <RecommendedJobs />
+          <JobSeekerDashboard />
+        </>
       )}
     </main>
   );

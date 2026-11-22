@@ -5,11 +5,13 @@ import { MemoryRouter } from "react-router-dom";
 import DashboardPage from "./DashboardPage";
 import { getApplicationActivity, getApplicationSummary } from "../api/analytics";
 import { getMyApplications } from "../api/myApplications";
+import { getRecommendations } from "../api/recommendations";
 import { useAuth } from "../context/useAuth";
 
 // fake the API and the logged-in user, so no backend is needed
 vi.mock("../api/analytics");
 vi.mock("../api/myApplications");
+vi.mock("../api/recommendations");
 vi.mock("../context/useAuth");
 
 const ZERO = { Applied: 0, "Under Review": 0, Interview: 0, Offered: 0, Rejected: 0 };
@@ -34,6 +36,9 @@ function renderPage() {
 
 beforeEach(() => {
   loginAs("JOB_SEEKER");
+  vi.mocked(getRecommendations).mockResolvedValue({
+    items: [], mode: "fake", resume_used: false, message: null,
+  });
   vi.mocked(getApplicationActivity).mockResolvedValue({
     days: 30,
     points: [
