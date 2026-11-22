@@ -63,6 +63,17 @@ jobs and review applicants.
 - The interactive API docs are at `/docs` when the backend is running (for example http://localhost:8000/docs).
 
 
+## Repository layout
+
+```
+backend/    FastAPI app (App/), alembic/, tests/, scripts/, requirements.txt, pytest.ini
+frontend/   React + Vite app (src/, public/, package.json, vite/tsconfig/eslint config)
+Documentation/   sprint documents, testing guide, static analysis reports
+AI_Doc/     personal AI logs and reports
+```
+
+Run backend commands from `backend/` and frontend commands from `frontend/`.
+
 ## Set up
 **Step 1: clone and pull the latest code**
 - Ensure you're on the Main branch by running this on the terminal and have the latest update by running:
@@ -74,6 +85,7 @@ jobs and review applicants.
 **Step 2: Create a virtual environment**
 - Run this on your terminal:
   ```bash
+  cd backend
   python3 -m venv .venv
   ```
 
@@ -92,7 +104,7 @@ jobs and review applicants.
 
 **Step 5: Environment variables**
 
-In the root folder, create a file named exactly ".env" with:
+In the `backend/` folder (or the repository root, both are found), create a file named exactly ".env" with:
 
 - DATABASE_URL=your-database-link
 JWT_SECRET_KEY=any-long-random-string (generate with:
@@ -101,7 +113,7 @@ CORS_ORIGINS=http://localhost:5173
 
 Never commit this file. Each teammate creates their own.
 
-You can also copy `.env.example` (in the root folder) to `.env` and fill in your own values.
+You can also copy `.env.example` (in the repository root) to `.env` and fill in your own values.
 
 #### AI feedback settings
 
@@ -117,7 +129,7 @@ The app uses fake mode whenever `AI_FEEDBACK_MODE` is `fake` or `AI_API_KEY` is 
 
 The frontend uses `VITE_API_BASE_URL` to connect to the backend.
 
-For local development, you can add this to your `.env` file:
+For local development, you can add this to a `.env` file inside `frontend/`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000
@@ -131,7 +143,7 @@ and includes the saved login token when available.
 
 Step 6: Load sample jobs (optional)
 
-* To fill the database with 18 sample job postings for testing search and applications, run this from the root folder:
+* To fill the database with 18 sample job postings for testing search and applications, run this from the `backend/` folder:
 
 ```
 python -m scripts.seed_jobs
@@ -144,10 +156,12 @@ python -m scripts.seed_jobs
 
 ### For the Backend run:
    ```bash
+    cd backend
     uvicorn App.main:app --reload
   ```
 ### For the Frontend run: 
    ```bash
+    cd frontend
     npm install
     npm run dev
   ```
@@ -156,13 +170,13 @@ python -m scripts.seed_jobs
 
 Before submitting code, make sure all automated tests pass. The tests use their own temporary databases and never touch the shared Neon database. CI runs the same checks on every pull request into `main`.
 
-**Backend** (from the repository root, with the virtual environment on):
+**Backend** (from `backend/`, with the virtual environment on):
 ```bash
 .venv/bin/python -m pytest -q
 ```
 On Windows PowerShell: `.\.venv\Scripts\python -m pytest -q`
 
-**Frontend:**
+**Frontend** (from `frontend/`):
 ```bash
 npm test
 ```
