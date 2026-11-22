@@ -1,4 +1,4 @@
-
+﻿
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { apiFetch } from "./client";
@@ -28,6 +28,24 @@ function makePdf(name = "resume.pdf") {
   });
 }
 
+function expectResumeRequest(
+  url: string,
+  method: string,
+  file: File
+) {
+  expect(apiFetch).toHaveBeenCalledOnce();
+
+  const [actualUrl, options] = vi.mocked(apiFetch).mock.calls[0];
+
+  expect(actualUrl).toBe(url);
+  expect(options?.method).toBe(method);
+  expect(options?.body).toBeInstanceOf(FormData);
+
+  const formData = options?.body as FormData;
+  expect(formData.get("file")).toBe(file);
+}
+
+
 describe("KR-12 Resume API Tests", () => {
   it("requests the logged-in user's resumes", async () => {
     const resumes = [
@@ -42,29 +60,22 @@ describe("KR-12 Resume API Tests", () => {
     expect(result).toEqual(resumes);
   });
 
-  it("uploads a valid resume using FormData", async () => {
-    const file = makePdf();
 
-    vi.mocked(apiFetch).mockResolvedValue({
-      id: 10,
-      filename: "resume.pdf",
-    });
+it("uploads a valid resume using FormData", async () => {
+  const file = makePdf();
 
-    await uploadResume(file);
-
-    expect(apiFetch).toHaveBeenCalledWith(
-      "/resumes",
-      expect.objectContaining({
-        method: "POST",
-        body: expect.any(FormData),
-      })
-    );
-
-    const options = vi.mocked(apiFetch).mock.calls[0][1];
-    const body = options?.body as FormData;
-
-    expect(body.get("file")).toBe(file);
+  vi.mocked(apiFetch).mockResolvedValue({
+    id: 10,
+    filename: "resume.pdf",
   });
+
+  await uploadResume(file);
+
+  expectResumeRequest("/resumes", "POST", file);
+});
+
+
+
 
   it("rejects an invalid resume before uploading", async () => {
     const file = new File(["invalid"], "notes.txt", {
@@ -78,29 +89,22 @@ describe("KR-12 Resume API Tests", () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 
-  it("replaces a resume using PUT and the correct ID", async () => {
-    const file = makePdf("updated.pdf");
 
-    vi.mocked(apiFetch).mockResolvedValue({
-      id: 15,
-      filename: "updated.pdf",
-    });
+it("replaces a resume using PUT and the correct ID", async () => {
+  const file = makePdf("updated.pdf");
 
-    await replaceResume(15, file);
-
-    expect(apiFetch).toHaveBeenCalledWith(
-      "/resumes/15",
-      expect.objectContaining({
-        method: "PUT",
-        body: expect.any(FormData),
-      })
-    );
-
-    const options = vi.mocked(apiFetch).mock.calls[0][1];
-    const body = options?.body as FormData;
-
-    expect(body.get("file")).toBe(file);
+  vi.mocked(apiFetch).mockResolvedValue({
+    id: 15,
+    filename: "updated.pdf",
   });
+
+  await replaceResume(15, file);
+
+  expectResumeRequest("/resumes/15", "PUT", file);
+});
+
+
+
 
   it("rejects invalid replacement files", async () => {
     const file = new File(["invalid"], "resume.exe", {
