@@ -1,208 +1,203 @@
+import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { ApplicationError, applyToJob } from '../api/applications'
+import { getResumes } from '../api/resumes'
+import type { Resume } from '../types/resume'
+import ApplyDialog from './ApplyDialog'
 
-import ApplyDialog from "./ApplyDialog";
-import { getResumes } from "../api/resumes";
-import { applyToJob, ApplicationError } from "../api/applications";
+vi.mock('../api/resumes', () => ({ getResumes: vi.fn() }))
+vi.mock('../api/applications', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/applications')>()),
+  applyToJob: vi.fn(),
+}))
 
-vi.mock("../api/resumes", () => ({
-  getResumes: vi.fn(),
-}));
+const mockGetResumes = vi.mocked(getResumes)
+const mockApply = vi.mocked(applyToJob)
 
-vi.mock("../api/applications", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../api/applications")>();
+const resumes: Resume[] = [
+  { id: 4, filename: 'cv-2026.pdf', content_type: 'application/pdf', size_bytes: 100, uploaded_at: '2026-11-01T00:00:00Z' },
+  { id: 5, filename: 'cv-old.pdf', content_type: 'application/pdf', size_bytes: 100, uploaded_at: '2026-10-01T00:00:00Z' },
+]
 
-  return {
-    ...actual,
-    applyToJob: vi.fn(),
-  };
-});
-
-const sampleResume = {
-  id: 7,
-  filename: "resume.pdf",
-};
+// jsdom does not implement the <dialog> methods, so add simple versions.
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    this.setAttribute('open', '')
+  }
+  HTMLDialogElement.prototype.close = function close() {
+    this.removeAttribute('open')
+    this.dispatchEvent(new Event('close'))
+  }
+})
 
 function renderDialog() {
   return render(
     <MemoryRouter>
-      <ApplyDialog jobId={42} jobTitle="Software Developer" />
-    </MemoryRouter>
-  );
+      <ApplyDialog jobId={9} jobTitle="Data Engineer" />
+    </MemoryRouter>,
+  )
+}
+
+async function openDialog() {
+  await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
 }
 
 beforeEach(() => {
-  vi.resetAllMocks();
-
-  // jsdom does not fully support native dialog methods.
-  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
-    configurable: true,
-    value: function (this: HTMLDialogElement) {
-      this.setAttribute("open", "");
-    },
-  });
-
-  Object.defineProperty(HTMLDialogElement.prototype, "close", {
-    configurable: true,
-    value: function (this: HTMLDialogElement) {
-      this.removeAttribute("open");
-      this.dispatchEvent(new Event("close"));
-    },
-  });
-
-  vi.mocked(getResumes).mockResolvedValue([
-    sampleResume,
-  ] as Awaited<ReturnType<typeof getResumes>>);
-});
-
+  mockGetResumes.mockReset()
+  mockApply.mockReset()
+})
 afterEach(() => {
-  cleanup();
-});
+  cleanup()
+})
 
-describe("KR-12 Apply Dialog Tests", () => {
-  it("opens the dialog and loads the user's resumes", async () => {
-    renderDialog();
+describe('ApplyDialog', () => {
+  it('loads the resumes when opened and selects the first one', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    renderDialog()
+    await openDialog()
 
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    const select = await screen.findByLabelText('Select Resume *')
+    expect(select).toHaveValue('4')
+    expect(screen.getByText('Data Engineer')).toBeInTheDocument()
+  })
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Software Developer")).toBeInTheDocument();
+  it('tells the user to upload a resume first when there are none', async () => {
+    mockGetResumes.mockResolvedValue([])
+    renderDialog()
+    await openDialog()
 
-    expect(
-      await screen.findByRole("option", { name: "resume.pdf" })
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Upload a resume first/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to My Profile' })).toHaveAttribute('href', '/profile')
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByText(/Upload a resume first/)).not.toBeVisible()
+  })
 
-    expect(getResumes).toHaveBeenCalledTimes(1);
-  });
+  it('shows an error when the resumes cannot be loaded', async () => {
+    mockGetResumes.mockRejectedValue(new Error('down'))
+    renderDialog()
+    await openDialog()
+    expect(await screen.findByText('Unable to load your resumes.')).toBeInTheDocument()
+  })
 
-  it("tells the user to upload a resume when none exists", async () => {
-    vi.mocked(getResumes).mockResolvedValue([]);
+  it('submits the application with the chosen resume and cover note', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    mockApply.mockResolvedValue({ id: 1, status: 'Applied', applied_at: '', message: '' })
+    renderDialog()
+    await openDialog()
 
-    renderDialog();
+    await userEvent.selectOptions(await screen.findByLabelText('Select Resume *'), '5')
+    await userEvent.type(screen.getByLabelText('Cover Note (Optional)'), 'Hi')
+    expect(screen.getByText('2/1000 characters')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Submit Application' }))
 
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    expect(await screen.findByText('Application submitted successfully!')).toBeInTheDocument()
+    expect(mockApply).toHaveBeenCalledWith(9, 5, 'Hi')
+    expect(screen.getByRole('link', { name: 'See my applications' })).toHaveAttribute('href', '/applications')
 
-    expect(
-      await screen.findByText(/upload a resume first before applying/i)
-    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByText('Application submitted successfully!')).not.toBeVisible()
+  })
 
-    expect(
-      screen.getByRole("link", { name: "Go to My Profile" })
-    ).toHaveAttribute("href", "/profile");
+  it('shows "already applied" when the server answers 409', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    mockApply.mockRejectedValue(new ApplicationError('conflict', 409))
+    renderDialog()
+    await openDialog()
+    await screen.findByLabelText('Select Resume *')
+    await userEvent.click(screen.getByRole('button', { name: 'Submit Application' }))
 
-    expect(applyToJob).not.toHaveBeenCalled();
-  });
+    expect(await screen.findByText('You have already applied to this job.')).toBeInTheDocument()
+  })
 
-  it("submits an application with the selected resume and cover note", async () => {
-    vi.mocked(applyToJob).mockResolvedValue({
-      id: 101,
-      status: "Applied",
-      applied_at: "2026-11-21T12:00:00Z",
-      message: "Application submitted successfully!",
-    });
+  it('shows the message of any other error', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    mockApply.mockRejectedValue(new Error('Server error'))
+    renderDialog()
+    await openDialog()
+    await screen.findByLabelText('Select Resume *')
+    await userEvent.click(screen.getByRole('button', { name: 'Submit Application' }))
+    expect(await screen.findByText('Server error')).toBeInTheDocument()
+  })
 
-    renderDialog();
+  it('allows the user to retry after a backend error', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
 
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
-
-    await screen.findByRole("option", { name: "resume.pdf" });
-
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /cover note/i }),
-      { target: { value: "I am interested in this position." } }
-    );
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Submit Application" })
-    );
-
-    await waitFor(() => {
-      expect(applyToJob).toHaveBeenCalledWith(
-        42,
-        7,
-        "I am interested in this position."
-      );
-    });
-
-    expect(
-      await screen.findByText("Application submitted successfully!")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("link", { name: "See my applications" })
-    ).toHaveAttribute("href", "/applications");
-  });
-
-  it("shows a clear error when the user already applied", async () => {
-    vi.mocked(applyToJob).mockRejectedValue(
-      new ApplicationError("Duplicate application", 409)
-    );
-
-    renderDialog();
-
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
-
-    await screen.findByRole("option", { name: "resume.pdf" });
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Submit Application" })
-    );
-
-    expect(
-      await screen.findByText("You have already applied to this job.")
-    ).toBeInTheDocument();
-  });
-
-  it("shows a backend error and allows the user to retry", async () => {
-    vi.mocked(applyToJob)
-      .mockRejectedValueOnce(new Error("Server unavailable"))
+    mockApply
+      .mockRejectedValueOnce(new Error('Server unavailable'))
       .mockResolvedValueOnce({
         id: 102,
-        status: "Applied",
-        applied_at: "2026-11-21T12:00:00Z",
-        message: "Application submitted successfully!",
-      });
+        status: 'Applied',
+        applied_at: '2026-11-21T12:00:00Z',
+        message: 'Application submitted successfully!',
+      })
 
-    renderDialog();
+    renderDialog()
+    await openDialog()
+    await screen.findByLabelText('Select Resume *')
 
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
-
-    await screen.findByRole("option", { name: "resume.pdf" });
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Submit Application" })
-    );
-
-    expect(
-      await screen.findByText("Server unavailable")
-    ).toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Submit Application" })
-    );
+    // First attempt fails
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Submit Application' })
+    )
 
     expect(
-      await screen.findByText("Application submitted successfully!")
-    ).toBeInTheDocument();
+      await screen.findByText('Server unavailable')
+    ).toBeInTheDocument()
 
-    expect(applyToJob).toHaveBeenCalledTimes(2);
-  });
-
-  it("shows an error if resumes cannot be loaded", async () => {
-    vi.mocked(getResumes).mockRejectedValue(
-      new Error("Network error")
-    );
-
-    renderDialog();
-
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    // Second attempt succeeds
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Submit Application' })
+    )
 
     expect(
-      await screen.findByText("Unable to load your resumes.")
-    ).toBeInTheDocument();
+      await screen.findByText('Application submitted successfully!')
+    ).toBeInTheDocument()
 
-    expect(applyToJob).not.toHaveBeenCalled();
-  });
-});
+    expect(mockApply).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows a default message for an error that is not an Error', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    mockApply.mockRejectedValue('weird')
+    renderDialog()
+    await openDialog()
+    await screen.findByLabelText('Select Resume *')
+    await userEvent.click(screen.getByRole('button', { name: 'Submit Application' }))
+    expect(await screen.findByText('Unable to submit your application.')).toBeInTheDocument()
+  })
+
+  it('does not submit without a resume chosen', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    renderDialog()
+    await openDialog()
+    await userEvent.selectOptions(await screen.findByLabelText('Select Resume *'), '')
+    expect(screen.getByRole('button', { name: 'Submit Application' })).toBeDisabled()
+    expect(mockApply).not.toHaveBeenCalled()
+  })
+
+  it('locks the form while the application is being sent', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    mockApply.mockReturnValue(new Promise(() => { }))
+    renderDialog()
+    await openDialog()
+    await screen.findByLabelText('Select Resume *')
+    await userEvent.click(screen.getByRole('button', { name: 'Submit Application' }))
+
+    expect(await screen.findByRole('button', { name: 'Submitting...' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+  })
+
+  it('starts fresh each time it is reopened', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+    renderDialog()
+    await openDialog()
+    await userEvent.type(await screen.findByLabelText('Cover Note (Optional)'), 'draft')
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    await openDialog()
+    expect(await screen.findByLabelText('Cover Note (Optional)')).toHaveValue('')
+  })
+})

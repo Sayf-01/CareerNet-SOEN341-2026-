@@ -1,150 +1,53 @@
-
-import { describe, expect, it } from "vitest";
-
+import { describe, expect, it } from 'vitest'
 import {
-  validateResumeFile,
   MAX_RESUME_SIZE,
-  RESUME_VALIDATION_ERROR,
   RESUME_ACCEPT,
-} from "./resumeRules";
+  RESUME_VALIDATION_ERROR,
+  validateResumeFile,
+} from './resumeRules'
 
-describe("KR-12 Resume File Validation", () => {
-  // Creates a test file without allocating several MB of memory.
-  function makeFile(
-    name: string,
-    type: string,
-    size: number
-  ): File {
-    const file = new File(["test"], name, { type });
+const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
-    Object.defineProperty(file, "size", {
-      configurable: true,
-      value: size,
-    });
+describe('validateResumeFile', () => {
+  it('accepts a PDF, DOC and DOCX', () => {
+    expect(validateResumeFile(new File(['x'], 'a.pdf', { type: 'application/pdf' }))).toBeNull()
+    expect(validateResumeFile(new File(['x'], 'a.doc', { type: 'application/msword' }))).toBeNull()
+    expect(validateResumeFile(new File(['x'], 'a.DOCX', { type: DOCX }))).toBeNull()
+  })
 
-    return file;
-  }
+  it('accepts a Word file when the browser gives no MIME type', () => {
+    expect(validateResumeFile(new File(['x'], 'a.docx', { type: '' }))).toBeNull()
+  })
 
-  it("accepts a valid PDF resume", () => {
-    const file = makeFile(
-      "resume.pdf",
-      "application/pdf",
-      1024
-    );
+  it('rejects a file without an extension', () => {
+    expect(validateResumeFile(new File(['x'], 'resume'))).toBe(RESUME_VALIDATION_ERROR)
+  })
 
-    expect(validateResumeFile(file)).toBeNull();
-  });
+  it('rejects an unsupported extension', () => {
+    expect(validateResumeFile(new File(['x'], 'a.txt', { type: 'text/plain' }))).toBe(
+      RESUME_VALIDATION_ERROR,
+    )
+  })
 
-  it("accepts DOC and DOCX resumes", () => {
-    const doc = makeFile(
-      "resume.doc",
-      "application/msword",
-      1024
-    );
+  it('rejects a file whose MIME type does not match its extension', () => {
+    expect(validateResumeFile(new File(['x'], 'a.pdf', { type: 'image/png' }))).toBe(
+      RESUME_VALIDATION_ERROR,
+    )
+  })
 
-    const docx = makeFile(
-      "resume.docx",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      1024
-    );
+  it('rejects an empty file', () => {
+    expect(validateResumeFile(new File([], 'a.pdf', { type: 'application/pdf' }))).toBe(
+      RESUME_VALIDATION_ERROR,
+    )
+  })
 
-    expect(validateResumeFile(doc)).toBeNull();
-    expect(validateResumeFile(docx)).toBeNull();
-  });
-
-  it("accepts uppercase file extensions", () => {
-    const file = makeFile(
-      "Resume.PDF",
-      "application/pdf",
-      1024
-    );
-
-    expect(validateResumeFile(file)).toBeNull();
-  });
-
-  it("rejects unsupported file extensions", () => {
-    const file = makeFile(
-      "resume.txt",
-      "text/plain",
-      1024
-    );
-
-    expect(validateResumeFile(file)).toBe(
-      RESUME_VALIDATION_ERROR
-    );
-  });
-
-  it("rejects files without an extension", () => {
-    const file = makeFile(
-      "resume",
-      "",
-      1024
-    );
-
-    expect(validateResumeFile(file)).toBe(
-      RESUME_VALIDATION_ERROR
-    );
-  });
-
-  it("rejects an incorrect MIME type", () => {
-    const file = makeFile(
-      "resume.pdf",
-      "text/plain",
-      1024
-    );
-
-    expect(validateResumeFile(file)).toBe(
-      RESUME_VALIDATION_ERROR
-    );
-  });
-
-  it("accepts a Word file with an empty MIME type", () => {
-    const file = makeFile(
-      "resume.docx",
-      "",
-      1024
-    );
-
-    expect(validateResumeFile(file)).toBeNull();
-  });
-
-  it("rejects files larger than 5 MB", () => {
-    const file = makeFile(
-      "resume.pdf",
-      "application/pdf",
-      MAX_RESUME_SIZE + 1
-    );
-
-    expect(validateResumeFile(file)).toBe(
-      RESUME_VALIDATION_ERROR
-    );
-  });
-
-  it("accepts a file exactly 5 MB", () => {
-    const file = makeFile(
-      "resume.pdf",
-      "application/pdf",
-      MAX_RESUME_SIZE
-    );
-
-    expect(validateResumeFile(file)).toBeNull();
-  });
-
-  it("rejects an empty file", () => {
-    const file = makeFile(
-      "resume.pdf",
-      "application/pdf",
-      0
-    );
-
-    expect(validateResumeFile(file)).toBe(
-      RESUME_VALIDATION_ERROR
-    );
-  });
-
-  it("provides the correct file input extensions", () => {
-    expect(RESUME_ACCEPT).toBe(
-      ".pdf,.doc,.docx"
-    );
-  });
-});
+  it('rejects a file over 5 MB but accepts exactly 5 MB', () => {
+    const big = new File([new Uint8Array(MAX_RESUME_SIZE + 1)], 'a.pdf', { type: 'application/pdf' })
+    const exact = new File([new Uint8Array(MAX_RESUME_SIZE)], 'a.pdf', { type: 'application/pdf' })
+    expect(validateResumeFile(big)).toBe(RESUME_VALIDATION_ERROR)
+    expect(validateResumeFile(exact)).toBeNull()
+  })
+  it('provides the correct file input extensions', () => {
+    expect(RESUME_ACCEPT).toBe('.pdf,.doc,.docx')
+  })
+})

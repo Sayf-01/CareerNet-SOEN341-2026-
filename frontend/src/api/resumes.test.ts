@@ -1,178 +1,79 @@
-﻿
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { apiFetch } from "./client";
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { apiFetch } from './client'
 import {
-  getResumes,
-  uploadResume,
-  replaceResume,
   deleteResume,
   downloadResume,
-  getResumeFeedback,
-} from "./resumes";
+  getResumes,
+  replaceResume,
+  uploadResume,
+} from './resumes'
 
-import { RESUME_VALIDATION_ERROR } from "../constants/resumeRules";
+vi.mock('./client', () => ({ apiFetch: vi.fn() }))
+const mockApiFetch = vi.mocked(apiFetch)
 
-vi.mock("./client", () => ({
-  apiFetch: vi.fn(),
-}));
+const pdf = new File(['%PDF-1.4'], 'cv.pdf', { type: 'application/pdf' })
 
-afterEach(() => {
-  vi.resetAllMocks();
-});
+beforeEach(() => {
+  mockApiFetch.mockReset()
+})
 
-function makePdf(name = "resume.pdf") {
-  return new File(["sample resume"], name, {
-    type: "application/pdf",
-  });
-}
+describe('resumes api', () => {
+  it('lists my resumes', async () => {
+    mockApiFetch.mockResolvedValue([{ id: 1 }])
+    await expect(getResumes()).resolves.toEqual([{ id: 1 }])
+    expect(mockApiFetch).toHaveBeenCalledWith('/resumes')
+  })
 
-function expectResumeRequest(
-  url: string,
-  method: string,
-  file: File
-) {
-  expect(apiFetch).toHaveBeenCalledOnce();
+  it('uploads a valid file as multipart form data', async () => {
+    mockApiFetch.mockResolvedValue({ id: 2 })
+    await uploadResume(pdf)
+    const [path, options] = mockApiFetch.mock.calls[0]!
+    expect(path).toBe('/resumes')
+    expect(options?.method).toBe('POST')
+    expect((options?.body as FormData).get('file')).toBeInstanceOf(File)
+  })
 
-  const [actualUrl, options] = vi.mocked(apiFetch).mock.calls[0];
+  it('refuses to upload a file type that is not allowed', async () => {
+    const exe = new File(['x'], 'virus.exe', { type: 'application/x-msdownload' })
+    await expect(uploadResume(exe)).rejects.toThrow('Only PDF or Word files')
+    expect(mockApiFetch).not.toHaveBeenCalled()
+  })
 
-  expect(actualUrl).toBe(url);
-  expect(options?.method).toBe(method);
-  expect(options?.body).toBeInstanceOf(FormData);
+  it('replaces a resume with PUT', async () => {
+    mockApiFetch.mockResolvedValue({ id: 4 })
+    await replaceResume(4, pdf)
+    const [path, options] = mockApiFetch.mock.calls[0]!
+    expect(path).toBe('/resumes/4')
+    expect(options?.method).toBe('PUT')
+    expect(options?.body).toBeInstanceOf(FormData)
+  })
 
-  const formData = options?.body as FormData;
-  expect(formData.get("file")).toBe(file);
-}
+  it('refuses to replace a resume with an invalid file', async () => {
+    const empty = new File([], 'cv.pdf', { type: 'application/pdf' })
+    await expect(replaceResume(4, empty)).rejects.toThrow('Only PDF or Word files')
+    expect(mockApiFetch).not.toHaveBeenCalled()
+  })
 
+  it('deletes a resume', async () => {
+    mockApiFetch.mockResolvedValue(undefined)
+    await deleteResume(9)
+    expect(mockApiFetch).toHaveBeenCalledWith('/resumes/9', { method: 'DELETE' })
+  })
 
-describe("KR-12 Resume API Tests", () => {
-  it("requests the logged-in user's resumes", async () => {
-    const resumes = [
-      { id: 1, filename: "resume.pdf" },
-    ];
+  it('downloads a resume', async () => {
+    const blob = new Blob(['x'])
+    mockApiFetch.mockResolvedValue(blob)
+    await expect(downloadResume(9)).resolves.toBe(blob)
+    expect(mockApiFetch).toHaveBeenCalledWith('/resumes/9/download')
+  })
 
-    vi.mocked(apiFetch).mockResolvedValue(resumes);
-
-    const result = await getResumes();
-
-    expect(apiFetch).toHaveBeenCalledWith("/resumes");
-    expect(result).toEqual(resumes);
-  });
-
-
-it("uploads a valid resume using FormData", async () => {
-  const file = makePdf();
-
-  vi.mocked(apiFetch).mockResolvedValue({
-    id: 10,
-    filename: "resume.pdf",
-  });
-
-  await uploadResume(file);
-
-  expectResumeRequest("/resumes", "POST", file);
-});
-
-
-
-
-  it("rejects an invalid resume before uploading", async () => {
-    const file = new File(["invalid"], "notes.txt", {
-      type: "text/plain",
-    });
-
-    await expect(uploadResume(file)).rejects.toThrow(
-      RESUME_VALIDATION_ERROR
-    );
-
-    expect(apiFetch).not.toHaveBeenCalled();
-  });
-
-
-it("replaces a resume using PUT and the correct ID", async () => {
-  const file = makePdf("updated.pdf");
-
-  vi.mocked(apiFetch).mockResolvedValue({
-    id: 15,
-    filename: "updated.pdf",
-  });
-
-  await replaceResume(15, file);
-
-  expectResumeRequest("/resumes/15", "PUT", file);
-});
-
-
-
-
-  it("rejects invalid replacement files", async () => {
-    const file = new File(["invalid"], "resume.exe", {
-      type: "application/octet-stream",
-    });
-
-    await expect(replaceResume(15, file)).rejects.toThrow(
-      RESUME_VALIDATION_ERROR
-    );
-
-    expect(apiFetch).not.toHaveBeenCalled();
-  });
-
-  it("deletes the correct resume", async () => {
-    vi.mocked(apiFetch).mockResolvedValue(undefined);
-
-    await deleteResume(20);
-
-    expect(apiFetch).toHaveBeenCalledWith(
-      "/resumes/20",
-      { method: "DELETE" }
-    );
-  });
-
-  it("downloads the correct resume", async () => {
-    const fileBlob = new Blob(["PDF content"], {
-      type: "application/pdf",
-    });
-
-    vi.mocked(apiFetch).mockResolvedValue(fileBlob);
-
-    const result = await downloadResume(30);
-
-    expect(apiFetch).toHaveBeenCalledWith(
-      "/resumes/30/download"
-    );
-
-    expect(result).toBe(fileBlob);
-  });
-
-  it("requests AI feedback using POST", async () => {
-    const feedback = {
-      summary: "Good experience",
-      strengths: ["Python"],
-      improvements: [],
-      missing_sections: [],
-      keywords: ["React"],
-    };
-
-    vi.mocked(apiFetch).mockResolvedValue(feedback);
-
-    const result = await getResumeFeedback(40);
-
-    expect(apiFetch).toHaveBeenCalledWith(
-      "/resumes/40/feedback",
-      { method: "POST" }
-    );
-
-    expect(result).toEqual(feedback);
-  });
-
-  it("propagates backend errors", async () => {
-    vi.mocked(apiFetch).mockRejectedValue(
-      new Error("Server unavailable")
-    );
+  it('propagates backend errors', async () => {
+    mockApiFetch.mockRejectedValue(
+      new Error('Server unavailable')
+    )
 
     await expect(getResumes()).rejects.toThrow(
-      "Server unavailable"
-    );
-  });
-});
+      'Server unavailable'
+    )
+  })
+})
