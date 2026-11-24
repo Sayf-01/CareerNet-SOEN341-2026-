@@ -14,6 +14,8 @@ import Input from "../components/Input";// the standard text box
 import FormField from "../components/FormField"; // wraps a box with a label + a spot for error message
 // (Stage D): Alert = the colored message box, Loader = the "Loading..." text
 import Alert from "../components/Alert";
+// the shared email rule (same one Register uses)
+import { EMAIL_REGEX } from "../constants/validation";
 import Loader from "../components/Loader";
 // (Stage D): the API service + the translator for the backend's error replies
 import { authService, getAuthErrorMessage } from "../services/authService";
@@ -35,10 +37,8 @@ interface LoginErrors {
   general?: string;
 }
 
-// (Stage C): the email rule (same one Krish uses on register)
-// regex = a pattern ---> "some text, then @, then some text, then a dot, then some text"
-// \\s = no spaces allowed, [^...] = anything EXCEPT these characters
-const EMAIL_REGEX = new RegExp("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+// (Stage C): the email rule now lives in constants/validation.ts
+// so Login and Register share the same pattern
 
 // -- The Component: a function that return what to draw on a screen
 
