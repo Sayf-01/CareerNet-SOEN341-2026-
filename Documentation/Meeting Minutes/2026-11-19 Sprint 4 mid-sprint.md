@@ -51,18 +51,20 @@ We noted that after pulling main, everyone should run `pip install -r requiremen
 
 ## 5. Action Items
 
-| What | Who | By when | Issue |
+| What | Who | By when | Issue / PR |
 | --- | --- | --- | --- |
-| Repository reorganization (SA-26) | Sayf | Nov 19 | |
-| Check the backend after the reorganization (KA-17) | Kaila | After SA-26 | |
-| Check the frontend after the reorganization (DA-15) | Dany | After SA-26 | |
-| Recommendations endpoint for AI job matching (LA-12) | Lamees | Nov 20 | |
-| Recommended jobs panel (DA-11) | Dany | Nov 20 | |
-| Backend tests for coverage gaps (KA-15, LA-13, YO-12) | Kaila, Lamees, Youssef | Nov 21 | |
-| Frontend tests for coverage gaps (DA-12, KR-12) | Dany, Krish | Nov 21 | |
-| Acceptance test pass for all stories (SA-29) | Youssef | Nov 22 | |
-| Demo script and rehearsal (SA-30) | Krish | Nov 22 | |
-| Sprint 4 summary report (SA-31) | Lamees | Nov 23 | |
+| Repository reorganization (SA-26) | Sayf | Nov 19 | PR #235 |
+| Check the backend after the reorganization (KA-17) | Kaila | After SA-26 | #239 |
+| Check the frontend after the reorganization (DA-15) | Dany | After SA-26 | — |
+| Recommendations endpoint for AI job matching (LA-12) | Lamees | Nov 20 | PR #217 |
+| Recommended jobs panel (DA-11) | Dany | Nov 20 | PR #224 |
+| Backend tests for coverage gaps (KA-15, LA-13, YO-12) | Kaila, Lamees, Youssef | Nov 21 | #226, PR #227 (KA-15) |
+| Frontend tests for coverage gaps (DA-12, KR-12) | Dany, Krish | Nov 21 | — |
+| Acceptance test pass for all stories (SA-29) | Youssef | Nov 22 | — |
+| Demo script and rehearsal (SA-30) | Krish | Nov 22 | — |
+| Sprint 4 summary report (SA-31) | Lamees | Nov 23 | — |
+
+A dash means the task had no GitHub issue or pull request to link when these minutes were written.
 
 ## 6. Next Meeting
 

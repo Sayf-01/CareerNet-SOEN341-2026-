@@ -66,16 +66,18 @@ We agreed on simple rules for each of these (see Decisions).
 
 ## 5. Action Items
 
-| What | Who | By when | Issue |
+| What | Who | By when | Issue / PR |
 | --- | --- | --- | --- |
-| Sprint 4 milestone, board and labels (SA-28) | Krish | Nov 16 | |
-| Pull request template and review checklist (SA-25) | Krish | Nov 17 | |
-| Test coverage in CI (SA-21) | Sayf | Nov 17 | |
-| SonarCloud analysis in CI (SA-22) | Sayf | Nov 17 | |
-| Meeting minutes folder, README and template (SA-27) | Kaila | Nov 18 | |
-| Candidate jobs and keyword score for job matching (KA-14) | Kaila | Nov 18 | #211 |
-| AI job matching service (YO-11) | Youssef | Nov 19 | |
-| Job matching acceptance test draft (AT-7, DA-16) | Dany | Nov 17 | |
+| Sprint 4 milestone, board and labels (SA-28) | Krish | Nov 16 | — |
+| Pull request template and review checklist (SA-25) | Krish | Nov 17 | — |
+| Test coverage in CI (SA-21) | Sayf | Nov 17 | PR #213 |
+| SonarCloud analysis in CI (SA-22) | Sayf | Nov 17 | PR #214 |
+| Meeting minutes folder, README and template (SA-27) | Kaila | Nov 18 | #228 |
+| Candidate jobs and keyword score for job matching (KA-14) | Kaila | Nov 18 | #211, PR #212 |
+| AI job matching service (YO-11) | Youssef | Nov 19 | PR #217 |
+| Job matching acceptance test draft (AT-7, DA-16) | Dany | Nov 17 | #225 |
+
+A dash means the task had no GitHub issue or pull request to link when these minutes were written.
 
 ## 6. Next Meeting
 
