@@ -277,7 +277,9 @@ const openDialog = () => {
                     value={selectedResumeId}
                     onChange={(event) =>
                       setSelectedResumeId(
-                        Number(event.target.value)
+                        event.target.value === ""
+                          ? ""
+                          : Number(event.target.value)
                       )
                     }
                     required
