@@ -30,7 +30,13 @@ export async function apiFetch<T>(
       ? path
       : `${API_PREFIX}${path}`;
 
-  const url = `${API_BASE_URL.replace(/\/+$/, "")}${apiPath}`;
+  let baseUrl = API_BASE_URL;
+
+  while (baseUrl.endsWith("/")) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+
+  const url = `${baseUrl}${apiPath}`;
 
   const headers = new Headers(options.headers);
 

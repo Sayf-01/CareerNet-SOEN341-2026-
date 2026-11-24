@@ -7,6 +7,7 @@ import Alert from "../components/Alert";
 import Loader from "../components/Loader";
 import { authService, getAuthErrorMessage } from "../services/authService";
 import type { UserRole } from "../types/auth";
+import { EMAIL_REGEX } from "../constants/validation";
 
 interface FormState {
   fullName: string;
@@ -25,7 +26,6 @@ interface FormErrors {
   general?: string;
 }
 
-const EMAIL_REGEX = new RegExp("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 const PASSWORD_MIN_LENGTH = 8;
 
 function RegisterPage() {

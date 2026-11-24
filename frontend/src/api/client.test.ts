@@ -4,6 +4,8 @@ import { apiFetch } from './client'
 afterEach(() => {
   localStorage.clear()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
+  vi.resetModules()
 })
 
 describe('apiFetch', () => {
@@ -19,6 +21,26 @@ describe('apiFetch', () => {
     expect(requestedUrl).toBeDefined()
     expect(new URL(String(requestedUrl)).pathname).toMatch(
       /^\/api\/v1(?:\/|$)/,
+    )
+  })
+
+  it('removes multiple trailing slashes from the API base URL', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8000///')
+    vi.resetModules()
+
+    const { apiFetch: fetchWithConfiguredBase } = await import('./client')
+
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 204 }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchWithConfiguredBase('/jobs')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/jobs',
+      expect.any(Object),
     )
   })
 
