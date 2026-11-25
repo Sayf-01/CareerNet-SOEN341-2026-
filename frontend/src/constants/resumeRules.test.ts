@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   MAX_RESUME_SIZE,
+  RESUME_ACCEPT,
   RESUME_VALIDATION_ERROR,
   validateResumeFile,
 } from './resumeRules'
@@ -45,5 +46,8 @@ describe('validateResumeFile', () => {
     const exact = new File([new Uint8Array(MAX_RESUME_SIZE)], 'a.pdf', { type: 'application/pdf' })
     expect(validateResumeFile(big)).toBe(RESUME_VALIDATION_ERROR)
     expect(validateResumeFile(exact)).toBeNull()
+  })
+  it('provides the correct file input extensions', () => {
+    expect(RESUME_ACCEPT).toBe('.pdf,.doc,.docx')
   })
 })

@@ -66,4 +66,14 @@ describe('resumes api', () => {
     await expect(downloadResume(9)).resolves.toBe(blob)
     expect(mockApiFetch).toHaveBeenCalledWith('/resumes/9/download')
   })
+
+  it('propagates backend errors', async () => {
+    mockApiFetch.mockRejectedValue(
+      new Error('Server unavailable')
+    )
+
+    await expect(getResumes()).rejects.toThrow(
+      'Server unavailable'
+    )
+  })
 })
