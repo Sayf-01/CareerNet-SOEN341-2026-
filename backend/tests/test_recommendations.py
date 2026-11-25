@@ -13,8 +13,10 @@ Coverage targets (from the sprint guide):
   route reached        – FastAPI does NOT confuse "recommendations" with a job id
 """
 
-import pytest
+import json
 from unittest.mock import patch
+
+import pytest
 
 from App.core.rate_limit import recommendations_limiter
 from App.main import app
@@ -24,6 +26,7 @@ from App.models.job import Job
 from App.models.profile import Profile
 from App.models.user import User, UserRole
 from tests.conftest import API
+from tests.test_ai_matching import fake_gemini
 
 
 # ---------- autouse reset so tests don't bleed into each other ----------
@@ -147,7 +150,7 @@ def test_job_seeker_with_profile_gets_200_in_fake_mode(client):
     assert "items" in body
     assert "mode" in body
     assert "resume_used" in body
-    assert body["mode"] in {"ai", "fake", "fallback"}
+    assert body["mode"] == "fake"
 
 
 def test_response_shape_matches_recommendation_list(client):
@@ -241,6 +244,28 @@ def test_ai_error_gives_fallback_mode(client):
 
     assert r.status_code == 200
     assert r.json()["mode"] == "fallback"
+
+
+def test_provider_answer_with_no_valid_matches_uses_keyword_fallback(client, monkeypatch):
+    monkeypatch.setenv("AI_MATCHING_MODE", "real")
+    monkeypatch.setenv("AI_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("AI_MODEL", "test-model")
+    headers = _register_and_login(client, "no-valid-matches@example.com")
+    db = _new_session()
+    _add_profile(db, _get_user_id(db, "no-valid-matches@example.com"))
+    job = _make_job(db)
+    sent = fake_gemini(monkeypatch, json.dumps([
+        {"job_id": job.id + 1, "score": 100, "reasons": ["Python"]},
+        {"job_id": job.id, "score": 90, "reasons": ["Great fit"]},
+    ]))
+
+    r = get_recs(client, headers)
+    assert sent
+    assert r.status_code == 200
+    body = r.json()
+    assert body["mode"] == "fallback"
+    assert body["resume_used"] is False
+    assert [item["job_id"] for item in body["items"]] == [job.id]
 
 
 def test_other_users_data_not_included(client):
@@ -347,19 +372,26 @@ def test_mode_is_fake_when_real_mode_is_on_but_no_api_key(client, monkeypatch):
 
 
 def test_mode_is_ai_when_real_mode_and_api_key_are_set(client, monkeypatch):
-    """With real mode and a key the response says "ai" (the AI call itself is replaced here)."""
+    """A validated provider match is returned in ai mode."""
     monkeypatch.setenv("AI_MATCHING_MODE", "real")
     monkeypatch.setenv("AI_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("AI_MODEL", "test-model")
     headers = _register_and_login(client, "withkey@example.com")
     db = _new_session()
     uid = _get_user_id(db, "withkey@example.com")
-    _add_profile(db, uid)
-    _make_job(db)
+    profile = _add_profile(db, uid)
+    profile.summary = "Test User works with Python."
+    db.commit()
+    job = _make_job(db)
 
-    with patch("App.routers.jobs.match_jobs", return_value=[]):
-        r = get_recs(client, headers)
+    sent = fake_gemini(monkeypatch, json.dumps([
+        {"job_id": job.id, "score": 90, "reasons": ["Python matches your skills"]},
+    ]))
+    r = get_recs(client, headers)
     assert r.status_code == 200
     assert r.json()["mode"] == "ai"
+    assert [item["job_id"] for item in r.json()["items"]] == [job.id]
+    assert "Test User" not in sent["body"]["contents"][0]["parts"][0]["text"]
 
 
 def test_jobs_that_match_nothing_are_not_recommended(client):

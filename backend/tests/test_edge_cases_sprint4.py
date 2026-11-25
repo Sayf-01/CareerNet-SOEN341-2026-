@@ -109,7 +109,7 @@ def test_unexpected_errors_become_ai_unavailable(monkeypatch):
 def test_matching_rejects_an_answer_that_is_not_a_list(monkeypatch):
     monkeypatch.setattr(ai_matching.json, "loads", lambda text: {"not": "a list"})
     with pytest.raises(ai_matching.MatchingUnavailableError, match="parse"):
-        ai_matching._parse_matches("[1]", [])
+        ai_matching._parse_matches("[1]", [], [], set())
 
 
 # ----- Job update rules -----

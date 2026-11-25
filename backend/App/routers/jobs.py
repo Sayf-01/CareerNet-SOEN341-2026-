@@ -43,9 +43,7 @@ def get_recommendations(
             detail="Recruiter access required",
         )
 
-    # 2. Build the profile from headline, summary, skills and location only (no name, email, phone
-    #    or user id fields). Note: the resume text added below is free text and can contain the
-    #    person's own contact details, because it is whatever they wrote in their resume.
+    # 2. Read the profile and check that it has enough information for matching.
     profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
     headline = (profile.headline or "").strip() if profile else ""
     skills: list[str] = (
@@ -86,7 +84,12 @@ def get_recommendations(
         "summary": (profile.summary or "") if profile else "",
         "skills": skills,
         "location": (profile.location or "") if profile else "",
-        "resume_text": resume_text,  # free text from the resume: may include contact details
+        "resume_text": resume_text,
+        # Used locally to redact known identifiers from free text before sending it.
+        "full_name": profile.full_name,
+        "account_name": current_user.full_name,
+        "email": current_user.email,
+        "phone": profile.phone,
     }
 
     # 5. Get candidates and call the matching service; fall back on any error
