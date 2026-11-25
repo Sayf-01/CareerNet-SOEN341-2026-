@@ -262,8 +262,13 @@ def _parse_matches(raw: str, candidate_jobs: list, jobs_repr: list, profile_word
         if not isinstance(raw, str):
             raise ValueError("Expected text")
         # Preserve support for Gemini wrapping the array in a Markdown fence.
-        fenced = re.fullmatch(r"[^\x60]*\x60{3}(?:json)?\s*(.*?)\s*\x60{3}\s*", raw, re.S | re.I)
-        matches = json.loads(fenced[1] if fenced else raw)
+        prefix, fence, body = raw.partition("```")
+        if fence and "`" not in prefix:
+            body = body.rstrip()
+            if body.endswith(fence):
+                body = body[:-len(fence)]
+                raw = (body[4:] if body[:4].casefold() == "json" else body).strip()
+        matches = json.loads(raw)
         if not isinstance(matches, list):
             raise ValueError("Expected a JSON array")
     except ValueError:

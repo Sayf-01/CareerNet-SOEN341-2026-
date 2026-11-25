@@ -272,6 +272,18 @@ def test_wrong_response_shapes_raise(real_mode, monkeypatch, raw):
         match_jobs(PROFILE, JOBS)
 
 
+@pytest.mark.parametrize("closing_fence", ["```", "``"])
+def test_long_fenced_response_requires_complete_closing_fence(real_mode, monkeypatch, closing_fence):
+    answer = json.dumps([{"job_id": 1, "score": 85, "reasons": ["Python"]}])
+    fake_gemini(monkeypatch, "Here you go:\n```JSON\n" + answer + " " * 100_000 + closing_fence)
+
+    if closing_fence == "```":
+        assert [match["job_id"] for match in match_jobs(PROFILE, JOBS)] == [1]
+    else:
+        with pytest.raises(MatchingUnavailableError, match="Could not parse AI response"):
+            match_jobs(PROFILE, JOBS)
+
+
 def test_fake_mode_is_deterministic_and_never_calls_provider(monkeypatch):
     from App.services.job_candidates import keyword_score
 
@@ -279,6 +291,8 @@ def test_fake_mode_is_deterministic_and_never_calls_provider(monkeypatch):
     monkeypatch.setenv("AI_API_KEY", "")
     monkeypatch.setattr(ai_matching.httpx, "post", lambda *a, **kw: pytest.fail("Network call"))
 
-    assert match_jobs(PROFILE, JOBS) == match_jobs(PROFILE, JOBS)
+    first_result = match_jobs(PROFILE, JOBS)
+    repeated_result = match_jobs(PROFILE, JOBS)
+    assert repeated_result == first_result
     expected = [keyword_score(SimpleNamespace(**PROFILE), job) for job in JOBS]
-    assert [(m["score"], m["reasons"]) for m in match_jobs(PROFILE, JOBS)] == expected
+    assert [(m["score"], m["reasons"]) for m in first_result] == expected
