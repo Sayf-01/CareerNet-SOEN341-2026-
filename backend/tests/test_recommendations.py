@@ -226,21 +226,27 @@ def test_rate_limit_gives_429_on_sixth_request(client):
     assert r.status_code == 429
 
 
-def test_ai_error_gives_fallback_mode(client):
-    """When match_jobs raises MatchingUnavailableError the endpoint falls back gracefully."""
+def test_malformed_provider_answer_uses_keyword_fallback(client, monkeypatch):
+    from tests.test_ai_matching import fake_gemini
+
+    monkeypatch.setenv("AI_MATCHING_MODE", "real")
+    monkeypatch.setenv("AI_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("AI_MODEL", "test-model")
     headers = _register_and_login(client, "fallback@example.com")
     db = _new_session()
     uid = _get_user_id(db, "fallback@example.com")
     _add_profile(db, uid)
-    _make_job(db, title="Python Developer", description="Python FastAPI work")
+    job = _make_job(db, title="Python Developer", description="Python FastAPI work")
+    sent = fake_gemini(monkeypatch, "Private fictional provider message")
+    r = get_recs(client, headers)
 
-    from App.services.ai_matching import MatchingUnavailableError
-
-    with patch("App.routers.jobs.match_jobs", side_effect=MatchingUnavailableError("boom")):
-        r = get_recs(client, headers)
-
+    assert sent
     assert r.status_code == 200
-    assert r.json()["mode"] == "fallback"
+    body = r.json()
+    assert body["mode"] == "fallback"
+    assert body["resume_used"] is False
+    assert [item["job_id"] for item in body["items"]] == [job.id]
+    assert "Private fictional provider message" not in r.text
 
 
 def test_other_users_data_not_included(client):

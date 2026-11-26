@@ -44,6 +44,23 @@ def test_fake_mode_without_api_key(monkeypatch):
     assert len(result.keywords) == 3
 
 
+def test_fake_feedback_returns_independent_nested_data(monkeypatch):
+    monkeypatch.setenv("AI_FEEDBACK_MODE", "fake")
+    monkeypatch.setenv("AI_API_KEY", "test-key-not-real")
+    monkeypatch.setattr(ai_feedback.httpx, "post", lambda *a, **kw: pytest.fail("Provider called"))
+
+    first = ai_feedback.generate_resume_feedback("First fictional resume")
+    expected_title = first.improvements[0].title
+    expected_strengths = first.strengths.copy()
+    first.improvements[0].title = "Changed title"
+    first.strengths.clear()
+    second = ai_feedback.generate_resume_feedback("Second fictional resume")
+
+    assert second.mode == "fake"
+    assert second.improvements[0].title == expected_title
+    assert second.strengths == expected_strengths
+
+
 def test_real_mode_with_valid_json(monkeypatch):
     enable_real_mode(monkeypatch)
 

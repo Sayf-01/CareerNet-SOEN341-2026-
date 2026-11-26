@@ -139,6 +139,40 @@ def test_network_error_raises(real_mode, monkeypatch):
         match_jobs(PROFILE, JOBS)
 
 
+@pytest.mark.parametrize(
+    ("status_code", "payload"),
+    [
+        (429, {"error": "Private provider detail"}),
+        (200, {"candidates": [], "debug": "Private provider detail"}),
+        (200, {"candidates": [{"content": {"parts": [{"text": None}]}}]}),
+    ],
+    ids=["provider-rate-limit", "no-candidates", "non-text-answer"],
+)
+def test_invalid_provider_responses_raise_safe_error(real_mode, monkeypatch, status_code, payload):
+    def fake_post(url, **kwargs):
+        return httpx.Response(status_code, request=httpx.Request("POST", url), json=payload)
+
+    monkeypatch.setattr(ai_matching.httpx, "post", fake_post)
+    profile = dict(PROFILE, resume_text="Private fictional resume text")
+
+    with pytest.raises(MatchingUnavailableError) as error:
+        match_jobs(profile, JOBS)
+
+    assert str(error.value) == "AI matching service unavailable"
+    assert error.value.__suppress_context__
+
+
+def test_real_mode_normalizes_null_and_blank_reasons(real_mode, monkeypatch):
+    fake_gemini(monkeypatch, json.dumps([
+        {"job_id": 1, "score": 90, "reasons": None},
+        {"job_id": 2, "score": 85, "reasons": ["", "Montreal matches"]},
+    ]))
+
+    assert [match["reasons"] for match in match_jobs(PROFILE, JOBS)] == [
+        [], ["Montreal matches"],
+    ]
+
+
 def test_unexpected_error_raises(real_mode, monkeypatch):
     def broken(*args, **kwargs):
         raise KeyError("unexpected")
