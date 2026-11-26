@@ -47,3 +47,33 @@ Each issue is found in SonarCloud by its file and line (see the Issues list link
 - **Issues 10 and 11 (email check):** the pattern `[^\s@]+\.[^\s@]+` lets the dot match in two places. The fix is to exclude the dot from the character class in those parts.
 - **Issue 9 (`client.ts`):** a different pattern, `/\/+$/`, which removes trailing slashes. The fix is a simple loop that removes a trailing slash.
 - **Pull requests that add new issues** show them in the SonarCloud check on the PR. The quality gate is not blocking merges this sprint.
+
+## YO-13 verification, November 26, 2026
+
+The live SonarCloud scan for `main` showed two open findings when checked
+against upstream `main` at `c94a985`. Both belong to Krish under
+[GitHub issue #219](https://github.com/Sayf-01/CareerNet-SOEN341-2026-/issues/219).
+
+| Report row | Current location | SonarCloud finding | Owner | Change in KR-13 |
+|---|---|---|---|---|
+| 9 | `frontend/src/api/client.ts:33` | [`typescript:S8786`](https://sonarcloud.io/project/issues?id=Sayf-01_CareerNet-SOEN341-2026&issues=AaH59YEazruU5Ed7ISME), open, Major severity, Medium reliability impact | Krish | Replaces the trailing-slash regex with string operations and adds a regression test for multiple trailing slashes. |
+| 10 | `frontend/src/pages/RegisterPage.tsx:28` | [`typescript:S8786`](https://sonarcloud.io/project/issues?id=Sayf-01_CareerNet-SOEN341-2026&issues=AaH59YGTzruU5Ed7ISMG), open, Major severity, Medium reliability impact | Krish | Reuses the shared email validator already used by LoginPage. |
+
+[KR-13 PR #243](https://github.com/Sayf-01/CareerNet-SOEN341-2026-/pull/243)
+was open and unmerged at head `691923b`. Its
+[SonarCloud Quality Gate](https://sonarcloud.io/dashboard?id=Sayf-01_CareerNet-SOEN341-2026&pullRequest=243)
+returned `OK`, and GitHub reported successful backend, frontend, and SonarCloud
+checks. Both findings remain open on `main` pending the merge and a new scan.
+PR #243 covers both changes, so YO-13 records the verification and leaves the
+production fixes with Krish. YO-11's matching fixes and YO-12's backend test
+coverage work are separate.
+
+SonarCloud already marks the LoginPage finding in row 11 as fixed. Its shared
+validator landed on `main` in commit `cc125ad`. The original table above remains
+the record of the first-scan findings and their owners.
+
+After PR #243 merges, verify that the SonarCloud analysis on `main` covers the
+merge commit or a descendant, that the `main` Quality Gate passes, and that both
+linked findings are marked fixed. Record the analyzed commit and scan result in
+this report. If either finding stays open, coordinate with Krish on the
+remaining work.
