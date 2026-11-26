@@ -122,6 +122,43 @@ describe('ApplyDialog', () => {
     expect(await screen.findByText('Server error')).toBeInTheDocument()
   })
 
+  it('allows the user to retry after a backend error', async () => {
+    mockGetResumes.mockResolvedValue(resumes)
+
+    mockApply
+      .mockRejectedValueOnce(new Error('Server unavailable'))
+      .mockResolvedValueOnce({
+        id: 102,
+        status: 'Applied',
+        applied_at: '2026-11-21T12:00:00Z',
+        message: 'Application submitted successfully!',
+      })
+
+    renderDialog()
+    await openDialog()
+    await screen.findByLabelText('Select Resume *')
+
+    // First attempt fails
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Submit Application' })
+    )
+
+    expect(
+      await screen.findByText('Server unavailable')
+    ).toBeInTheDocument()
+
+    // Second attempt succeeds
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Submit Application' })
+    )
+
+    expect(
+      await screen.findByText('Application submitted successfully!')
+    ).toBeInTheDocument()
+
+    expect(mockApply).toHaveBeenCalledTimes(2)
+  })
+
   it('shows a default message for an error that is not an Error', async () => {
     mockGetResumes.mockResolvedValue(resumes)
     mockApply.mockRejectedValue('weird')
@@ -143,7 +180,7 @@ describe('ApplyDialog', () => {
 
   it('locks the form while the application is being sent', async () => {
     mockGetResumes.mockResolvedValue(resumes)
-    mockApply.mockReturnValue(new Promise(() => {}))
+    mockApply.mockReturnValue(new Promise(() => { }))
     renderDialog()
     await openDialog()
     await screen.findByLabelText('Select Resume *')
