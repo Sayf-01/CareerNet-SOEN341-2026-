@@ -93,6 +93,33 @@ Backend coverage covers `backend/App/`. Frontend coverage covers `frontend/src/`
 without test files and `src/main.tsx`. Use the "Missing" lines (backend) and the
 per-file table (frontend) to find gaps and write tests for them.
 
+### YO-12 backend coverage
+
+The baseline was upstream `main` at `c94a985`, before the YO-12 test changes.
+The baseline had **338 passing tests** and the final run had **347 passing
+tests**. Both runs collected branch coverage in addition to line coverage.
+Run from `backend/` in a POSIX shell:
+
+```sh
+AI_FEEDBACK_MODE=fake AI_MATCHING_MODE=fake AI_API_KEY='' PYTHON_DOTENV_DISABLED=1 \
+  python -m pytest -q --cov --cov-branch --cov-report=term-missing
+```
+
+| File | Baseline line | Final line | Baseline branch | Final branch |
+|---|---:|---:|---:|---:|
+| `App/routers/recruiter.py` | 100% (78/78) | 100% (78/78) | 100% (22/22) | 100% (22/22) |
+| `App/schemas/recruiter.py` | 100% (37/37) | 100% (37/37) | 100% (6/6) | 100% (6/6) |
+| `App/services/ai_feedback.py` | 100% (77/77) | 100% (77/77) | 100% (32/32) | 100% (32/32) |
+| `App/services/ai_matching.py` | 100% (78/78) | 100% (78/78) | 100% (14/14) | 100% (14/14) |
+| All measured backend code | 100% (1190/1190) | 100% (1190/1190) | 98.74% (235/238) | 98.74% (235/238) |
+
+The target files already exceeded the 80% goal. The new tests check applicant
+access and privacy, the UTC end-date boundary, isolation between fake feedback
+results, and safe handling of malformed provider responses. The recommendations
+fallback test now exercises the matching service with a mocked provider reply.
+The three uncovered backend branch paths are in `App/crud/jobs.py` (24→28) and
+`App/routers/application_stats.py` (33→32 and 61→63).
+
 ## Code analysis (SonarCloud)
 
 After the tests, CI sends the code and both coverage reports to SonarCloud, which
@@ -112,4 +139,4 @@ Only defensive checks that the interface cannot reach are left untested:
 - `frontend/src/components/ApplicantRow.tsx` (invalid interview date): the browser's date picker never returns an unreadable date.
 - `frontend/src/pages/RecruiterJobPage.tsx` ("Posting is not loaded" and the double-click guard on archive): the form and the archive button are not shown until the posting is loaded.
 
-Everything else, on the backend and the frontend, runs in the test suite.
+The YO-12 table above records backend line and branch coverage separately.

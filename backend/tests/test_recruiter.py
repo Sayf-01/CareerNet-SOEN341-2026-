@@ -1,9 +1,12 @@
 # SA-9 tests for the recruiter endpoints (YO-3)
 
+import pytest
+
 from tests.conftest import API
 from App.main import app
 from App.database.connection import get_db
 from App.models.application import Application
+from App.models.profile import Profile
 
 JOB = {
     "title": "Frontend Developer",
@@ -135,3 +138,43 @@ def test_cannot_see_another_recruiters_applicants(client):
     response = client.get(f"{API}/recruiter/jobs/{job_id}/applications", headers=other)
 
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize("authenticated", [False, True], ids=["anonymous", "job-seeker"])
+def test_applicant_list_requires_recruiter_access(client, authenticated):
+    recruiter, _ = login_as(client, "recruiter@example.com", "RECRUITER")
+    seeker, seeker_id = login_as(client, "seeker@example.com", "JOB_SEEKER")
+    job = client.post(f"{API}/recruiter/jobs", json=JOB, headers=recruiter)
+    assert job.status_code == 201
+    job_id = job.json()["id"]
+    add_application(seeker_id, job_id)
+
+    response = client.get(
+        f"{API}/recruiter/jobs/{job_id}/applications",
+        headers=seeker if authenticated else None,
+    )
+
+    assert response.status_code == (403 if authenticated else 401)
+    assert set(response.json()) == {"detail"}
+
+
+def test_applicant_list_uses_profile_name_and_excludes_other_jobs(client):
+    recruiter, _ = login_as(client, "recruiter@example.com", "RECRUITER")
+    _, seeker_id = login_as(client, "seeker@example.com", "JOB_SEEKER")
+    _, other_id = login_as(client, "other@example.com", "JOB_SEEKER")
+    first = client.post(f"{API}/recruiter/jobs", json=JOB, headers=recruiter)
+    second = client.post(f"{API}/recruiter/jobs", json=JOB, headers=recruiter)
+    assert first.status_code == second.status_code == 201
+    job_id = first.json()["id"]
+    add_application(seeker_id, job_id)
+    add_application(other_id, second.json()["id"])
+    with next(app.dependency_overrides[get_db]()) as db:
+        db.add(Profile(user_id=seeker_id, full_name="Alex Example", phone="555-0100"))
+        db.commit()
+
+    response = client.get(f"{API}/recruiter/jobs/{job_id}/applications", headers=recruiter)
+
+    assert response.status_code == 200
+    assert [item["applicant_name"] for item in response.json()] == ["Alex Example"]
+    assert "seeker@example.com" not in response.text
+    assert "555-0100" not in response.text

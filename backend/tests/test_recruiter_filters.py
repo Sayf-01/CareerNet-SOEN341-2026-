@@ -113,6 +113,22 @@ def test_date_filter_includes_both_boundaries(client):
     }
 
 
+def test_end_date_alone_excludes_midnight_of_following_day(client):
+    recruiter, job_id, _, _, last_included = setup_applications(client)
+    _, seeker_id = login_as(client, "later@example.com", "JOB_SEEKER")
+    make_application(seeker_id, job_id, "2026-11-11T00:00:00+00:00")
+
+    response = client.get(
+        f"{API}/recruiter/jobs/{job_id}/applications",
+        headers=recruiter,
+        params={"date_to": "2026-11-10"},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 3
+    assert response.json()[0]["application_id"] == last_included
+
+
 def test_status_and_dates_work_together(client):
     recruiter, job_id, app1, app2, app3 = setup_applications(client)
 
