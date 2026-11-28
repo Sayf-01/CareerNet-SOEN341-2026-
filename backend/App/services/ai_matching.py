@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+from types import SimpleNamespace
 
 import httpx
 
@@ -77,13 +78,11 @@ def match_jobs(profile_data: dict, candidate_jobs: list) -> list[dict]:
 def _fake_match(profile_data: dict, candidate_jobs: list) -> list[dict]:
     """Keyword scoring – same logic as job_candidates.keyword_score, no network."""
 
-    class _Profile:
-        pass
-
-    p = _Profile()
-    p.skills = profile_data.get("skills") or []
-    p.headline = profile_data.get("headline") or ""
-    p.location = profile_data.get("location") or ""
+    p = SimpleNamespace(
+        skills=profile_data.get("skills") or [],
+        headline=profile_data.get("headline") or "",
+        location=profile_data.get("location") or "",
+    )
 
     scored = []
     for job in candidate_jobs:

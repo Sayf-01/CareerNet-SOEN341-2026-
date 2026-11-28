@@ -182,7 +182,7 @@ def _parse_feedback(raw: str) -> ResumeFeedback:
 
         return ResumeFeedback.model_validate(data)
 
-    except (ValueError, TypeError, ValidationError, KeyError) as exc:
+    except (ValueError, TypeError, ValidationError, KeyError):
         raise AIUnavailableError(
             "The AI answer could not be read"
         ) from None

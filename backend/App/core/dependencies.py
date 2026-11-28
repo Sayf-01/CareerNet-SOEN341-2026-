@@ -35,8 +35,8 @@ def get_current_user(
     try:
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = int(payload["sub"])  # login put the user's id in "sub"
-    except (jwt.PyJWTError, KeyError, ValueError, TypeError):
-        raise NOT_LOGGED_IN
+    except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
+        raise NOT_LOGGED_IN from exc
 
     user = db.get(User, user_id)
     if user is None:  # the account was deleted after the token was made

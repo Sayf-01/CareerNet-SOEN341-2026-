@@ -9,7 +9,6 @@ from App.models.job import Job
 from App.models.application import Application
 from App.models.profile import Profile
 from App.schemas.job import JobDetail
-from App.schemas.recruiter import CreateJobRequest, ReceivedApplication
 from datetime import date, datetime, time, timedelta, timezone
 from App.application_statuses import ALL_STATUSES
 from App.schemas.recruiter import CreateJobRequest, ReceivedApplication, RecruiterJobListItem, JobUpdate
