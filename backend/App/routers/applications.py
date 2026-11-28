@@ -72,9 +72,9 @@ def apply_for_job(
             )
 
         db.commit()  # saves the application and the notification together
-    except IntegrityError:  # two clicks at the same moment: the table's unique rule catches it
+    except IntegrityError as exc:  # two clicks at the same moment: the table's unique rule catches it
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALREADY_APPLIED)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALREADY_APPLIED) from exc
     db.refresh(application)
 
     return ApplicationCreated(id=application.id, status=application.status, applied_at=application.applied_at)

@@ -30,9 +30,9 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.add(user)
     try:
         db.commit()
-    except IntegrityError:  # two requests with the same email at the same moment
+    except IntegrityError as exc:  # two requests with the same email at the same moment
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=DUPLICATE_EMAIL)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=DUPLICATE_EMAIL) from exc
     db.refresh(user)
 
     return RegisterResponse(message="Registration successful!", user=UserOut.model_validate(user))

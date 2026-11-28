@@ -47,3 +47,28 @@ Each issue is found in SonarCloud by its file and line (see the Issues list link
 - **Issues 10 and 11 (email check):** the pattern `[^\s@]+\.[^\s@]+` lets the dot match in two places. The fix is to exclude the dot from the character class in those parts.
 - **Issue 9 (`client.ts`):** a different pattern, `/\/+$/`, which removes trailing slashes. The fix is a simple loop that removes a trailing slash.
 - **Pull requests that add new issues** show them in the SonarCloud check on the PR. The quality gate is not blocking merges this sprint.
+
+## PyLint (Python backend, extra scan)
+
+The lecture slides list PyLint as the usual tool for Python, so we ran it once on `backend/App` as an extra check. It is not part of CI; SonarCloud and ESLint remain the CI tools. Command, from `backend/`: `PYTHONPATH=. pylint App`.
+
+| | Score | Errors | Warnings |
+|---|---|---|---|
+| Before | 8.22 / 10 | 0 | 26 |
+| After | 8.31 / 10 | 0 | see below |
+
+Most of the remaining messages are style only: missing docstrings, long lines, trailing spaces and missing final newlines. We did not change those.
+
+**Fixed (10 warnings, no behavior change, 338 backend tests pass):**
+
+| File | Warning | Fix |
+|---|---|---|
+| `routers/auth.py` | raise-missing-from | `raise ... from exc` |
+| `routers/applications.py` | raise-missing-from | `raise ... from exc` |
+| `core/dependencies.py` | raise-missing-from | `raise ... from exc` |
+| `models/application.py` | unused-import (2) | removed `datetime`, `timezone` |
+| `routers/recruiter.py` | reimported (2) | removed the duplicate import line |
+| `services/ai_feedback.py` | unused-variable | removed `as exc` |
+| `services/ai_matching.py` | attribute-defined-outside-init (3) | `SimpleNamespace(...)` instead of a throwaway class |
+
+**Left on purpose:** `id` and `type` as parameter names (FastAPI path and query names), unused `request`/`exc` in the error handlers (required signature), and the `App.models` import in `main.py` (registers the tables).
